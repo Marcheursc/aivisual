@@ -41,7 +41,7 @@ def get_video_analytics(video_id):
 
 # 使用示例
 if __name__ == "__main__":
-    print("AI视频分析API客户端示例")
+    print("API客户端示例")
 
     # 1. 上传视频
     # 注意：你需要有一个实际的视频文件路径

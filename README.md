@@ -2,13 +2,15 @@
 
 ## 简介
 
-这是一个基于YOLOv12的AI视频智能检测系统，具备目标检测、跟踪和徘徊行为分析功能。
+这是一个基于YOLOv12的AI视频智能检测系统，具备目标检测、跟踪和多种行为分析功能。
 
 ## 功能特性
 
 - 基于YOLOv12的目标检测
 - 多目标跟踪（ByteTrack）
 - 徘徊行为检测与报警
+- 离岗检测与报警
+- 人员聚集检测与报警
 - 支持多种目标类别检测（人、车等）
 - 可视化显示检测结果和报警信息
 
@@ -34,9 +36,35 @@ pip install torch==2.8.0+cpu torchvision==0.13.0+cpu torchaudio==2.0.0+cpu --ext
 
 ## 运行系统
 
+系统包含多个功能模块，可以根据需要选择运行：
+
 ```bash
+# 运行徘徊检测
 python main.py
+
+# 运行离岗检测
+python leave_gather_detection/leave.py
+
+# 运行人员聚集检测
+python leave_gather_detection/main.py
+
+# 同时运行离岗和人员聚集检测
+python leave_gather_detection/whole.py
 ```
+
+## 模块说明
+
+系统功能已按用途分类组织：
+
+1. **徘徊检测模块** - 位于 `detector/` 目录
+   - 核心实现在 `detector/core.py`
+   - 使用说明请查看 `detector/README.md`
+
+2. **离岗和聚集检测模块** - 位于 `leave_gather_detection/` 目录
+   - 离岗检测: `leave.py`
+   - 人员聚集检测: `main.py`
+   - 综合检测: `whole.py`
+   - 使用说明请查看 `leave_gather_detection/README.md`
 
 ## 故障排除
 
