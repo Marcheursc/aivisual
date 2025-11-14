@@ -45,6 +45,16 @@
                         <input type="number" class="form-control" id="loiteringTimeThreshold" name="loitering_time_threshold" value="20" min="1">
                     </div>
                     
+                    <div class="mb-3" id="gatherOptions" style="display: none;">
+                        <label for="gatherThreshold" class="form-label">聚集人数阈值</label>
+                        <input type="number" class="form-control" id="gatherThreshold" name="gather_threshold" value="5" min="1">
+                    </div>
+                    
+                    <div class="mb-3" id="leaveOptions" style="display: none;">
+                        <label for="leaveThreshold" class="form-label">离岗时间阈值 (秒)</label>
+                        <input type="number" class="form-control" id="leaveThreshold" name="leave_threshold" value="5" min="1">
+                    </div>
+                    
                     <button type="submit" class="btn btn-primary" id="startDetectionBtn">开始检测</button>
                 </form>
             </div>
@@ -87,8 +97,16 @@ document.querySelectorAll('input[name="detectionType"]').forEach(radio => {
     radio.addEventListener('change', function() {
         if (this.value === 'loitering') {
             document.getElementById('loiteringOptions').style.display = 'block';
-        } else {
+            document.getElementById('gatherOptions').style.display = 'none';
+            document.getElementById('leaveOptions').style.display = 'none';
+        } else if (this.value === 'gather') {
             document.getElementById('loiteringOptions').style.display = 'none';
+            document.getElementById('gatherOptions').style.display = 'block';
+            document.getElementById('leaveOptions').style.display = 'none';
+        } else if (this.value === 'leave') {
+            document.getElementById('loiteringOptions').style.display = 'none';
+            document.getElementById('gatherOptions').style.display = 'none';
+            document.getElementById('leaveOptions').style.display = 'block';
         }
     });
 });

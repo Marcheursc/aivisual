@@ -75,16 +75,20 @@ def api_simple_detect():
         response = requests.post(f"{API_BASE_URL}/process_video/", params=params)
     elif detection_type == 'gather':
         # 聚集检测
+        gather_threshold = request.form.get('gather_threshold', 5)
         params = {
             'file_id': file_id,
-            'detection_type': 'gather'
+            'detection_type': 'gather',
+            'gather_threshold': gather_threshold
         }
         response = requests.post(f"{API_BASE_URL}/process_video/", params=params)
     elif detection_type == 'leave':
         # 离岗检测
+        leave_threshold = request.form.get('leave_threshold', 5)
         params = {
             'file_id': file_id,
-            'detection_type': 'leave'
+            'detection_type': 'leave',
+            'leave_threshold': leave_threshold
         }
         response = requests.post(f"{API_BASE_URL}/process_video/", params=params)
     

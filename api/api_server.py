@@ -28,8 +28,11 @@ except ImportError:
 # 初始化 FastAPI 应用
 app = FastAPI(title="视频分析API", description="基于YOLO和ByteTrack的视频分析服务")
 
-# 模拟存储目录
-UPLOAD_DIR = "uploads"
+# 获取当前文件的目录
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# 存储目录
+UPLOAD_DIR = os.path.join(current_dir, "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 

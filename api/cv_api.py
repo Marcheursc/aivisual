@@ -28,8 +28,8 @@ app = FastAPI(title="计算机视觉API",
               description="基于YOLOv12和ByteTrack的计算机视觉服务，提供人员检测、跟踪和异常行为检测功能")
 
 # 存储目录
-UPLOAD_DIR = "uploads"
-PROCESSED_DIR = "processed_videos"
+UPLOAD_DIR = os.path.join(project_path, "uploads")
+PROCESSED_DIR = os.path.join(project_path, "processed_videos")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 
@@ -76,7 +76,12 @@ async def process_video(
         background_tasks: BackgroundTasks,
         detect_loitering: bool = True,
         loitering_time_threshold: int = 20,
-        detection_type: str = "loitering"  # 新增参数：检测类型
+        detection_type: str = "loitering",  # 新增参数：检测类型
+        # 离岗和聚集检测的额外参数
+        leave_roi: Optional[str] = None,
+        leave_threshold: Optional[int] = None,
+        gather_roi: Optional[str] = None,
+        gather_threshold: Optional[int] = None
 ):
     """处理视频文件"""
     # 查找文件
@@ -97,20 +102,42 @@ async def process_video(
         "result_path": None
     }
 
+    # 解析ROI参数
+    parsed_leave_roi = None
+    parsed_gather_roi = None
+    
+    if leave_roi:
+        try:
+            # 解析格式如: "[(600,100),(1000,100),(1000,700),(600,700)]"
+            parsed_leave_roi = eval(leave_roi)
+        except:
+            pass
+            
+    if gather_roi:
+        try:
+            # 解析格式如: "[(220,300),(700,300),(700,700),(200,700)]"
+            parsed_gather_roi = eval(gather_roi)
+        except:
+            pass
+
     # 根据检测类型选择不同的处理函数
     if detection_type == "leave":
         # 离岗检测
         background_tasks.add_task(
             process_leave_detection_task,
             file_path,
-            task_id
+            task_id,
+            parsed_leave_roi,
+            leave_threshold
         )
     elif detection_type == "gather":
         # 聚集检测
         background_tasks.add_task(
             process_gather_detection_task,
             file_path,
-            task_id
+            task_id,
+            parsed_gather_roi,
+            gather_threshold
         )
     else:
         # 默认为徘徊检测
@@ -229,7 +256,9 @@ async def download_processed_video(task_id: str):
 
 async def process_leave_detection_task(
         video_path: str,
-        task_id: str
+        task_id: str,
+        roi: Optional[list] = None,
+        threshold: Optional[int] = None
 ):
     """离岗检测处理任务"""
     try:
@@ -238,7 +267,7 @@ async def process_leave_detection_task(
         from leave_gather_detection.leave import process_leave_detection
         
         # 处理视频
-        result_path = process_leave_detection(video_path)
+        result_path = process_leave_detection(video_path, roi, threshold)
         
         # 标记为完成
         processing_tasks[task_id]["status"] = "completed"
@@ -252,7 +281,9 @@ async def process_leave_detection_task(
 
 async def process_gather_detection_task(
         video_path: str,
-        task_id: str
+        task_id: str,
+        roi: Optional[list] = None,
+        threshold: Optional[int] = None
 ):
     """聚集检测处理任务"""
     try:
@@ -261,7 +292,7 @@ async def process_gather_detection_task(
         from leave_gather_detection.main import process_gather_detection
         
         # 处理视频
-        result_path = process_gather_detection(video_path)
+        result_path = process_gather_detection(video_path, roi, threshold)
         
         # 标记为完成
         processing_tasks[task_id]["status"] = "completed"
