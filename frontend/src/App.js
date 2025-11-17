@@ -4,6 +4,12 @@ import AppRoutes from './routes';
 import MainLayout from './layouts/MainLayout';
 import './App.css';
 
+// 导入组件样式
+import './components/FileUploader.css';
+import './components/DetectionControls.css';
+import './components/TaskMonitor.css';
+import './components/Button.css';
+
 function App() {
   return (
     <Router>
