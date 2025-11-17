@@ -2,7 +2,7 @@
 
 ## 简介
 
-这是一个基于YOLOv12的AI视频智能检测系统，具备目标检测、跟踪和多种行为分析功能。
+这是一个基于YOLOv12的AI视频智能检测系统，具备目标检测、跟踪和多种行为分析功能，采用React + FastAPI的现代化前后端分离架构。
 
 ## 功能特性
 
@@ -13,11 +13,61 @@
 - 人员聚集检测与报警
 - 支持多种目标类别检测（人、车等）
 - 可视化显示检测结果和报警信息
+- 前后端分离架构，现代化用户界面
+
+## 项目结构
+
+```
+project/
+├── api/                      # FastAPI 后端服务
+│   ├── algorithms/           # 核心算法模块
+│   ├── config/              # 配置文件
+│   ├── models/              # 模型管理
+│   ├── routes/              # API路由
+│   ├── core/                # 核心业务逻辑
+│   ├── utils/               # 工具函数
+│   ├── uploads/             # 上传文件目录
+│   ├── processed_videos/    # 处理后视频目录
+│   └── cv_api.py            # FastAPI 主服务
+├── frontend/                # React 前端应用
+│   ├── public/              # 静态资源
+│   ├── src/                 # 源代码
+│   │   ├── components/      # 公共组件（可复用）
+│   │   ├── pages/           # 页面组件
+│   │   │   ├── Home.js      # 首页
+│   │   │   ├── Upload/      # 上传页面
+│   │   │   │   ├── index.js
+│   │   │   │   └── VideoUpload.js
+│   │   │   ├── Detect/      # 检测页面
+│   │   │   │   ├── index.js
+│   │   │   │   └── DetectionControl.js
+│   │   │   ├── Status/      # 状态页面
+│   │   │   │   ├── index.js
+│   │   │   │   └── TaskStatus.js
+│   │   ├── routes/          # 前端路由配置
+│   │   │   └── index.js     # 路由定义
+│   │   ├── App.js           # 主应用组件
+│   │   ├── App.css          # 样式
+│   │   └── index.js         # 入口文件
+│   └── package.json         # 前端依赖配置
+├── yolov12/                 # YOLOv12 模型文件
+├── Dockerfile.backend       # 后端 Docker 配置
+├── Dockerfile.frontend      # 前端 Docker 配置
+├── docker-compose.yml       # Docker 容器编排配置
+└── requirements.txt         # Python 依赖
+```
 
 ## 安装依赖
 
 ```bash
-# 安装基础依赖
+# 安装前端依赖
+cd frontend
+npm install
+
+# 返回项目根目录
+cd ..
+
+# 安装Python依赖
 pip install -r requirements.txt
 
 # 安装lap库（ByteTrack需要）
@@ -33,40 +83,136 @@ pip install torch==2.8.0+cpu torchvision==0.13.0+cpu torchaudio==2.0.0+cpu --ext
 
 ## 运行系统
 
-系统包含多个功能模块，可以根据需要选择运行：
+系统采用前后端分离架构，需要分别启动前端和后端服务：
 
 ```bash
-# 运行徘徊检测
-python main.py
-
-# 运行离岗检测
-python leave_gather_detection/leave.py
-
-# 运行人员聚集检测
-python leave_gather_detection/main.py
-
-# 同时运行离岗和人员聚集检测
-python leave_gather_detection/whole.py
-```
-```bash
-# 运行web服务器
+# 启动后端API服务
 python api/cv_api.py
-python api/flask_app.py
+
+# 在另一个终端启动前端应用
+cd frontend
+npm start
 ```
+
+或者使用Docker容器化部署：
+
+```bash
+# 使用docker-compose一键部署
+docker-compose up --build
+```
+
+访问地址：
+- 前端界面: http://localhost:3000
+- 后端API文档: http://localhost:8000/docs
+
+## Git工作流规范
+
+本项目采用标准的Git工作流进行版本控制：
+
+### 分支策略
+
+1. **main分支** - 生产环境稳定版本
+2. **develop分支** - 开发环境最新版本
+3. **feature分支** - 功能开发分支，命名规范：`feature/功能名称`
+4. **hotfix分支** - 紧急修复分支，命名规范：`hotfix/问题描述`
+5. **release分支** - 发布准备分支，命名规范：`release/版本号`
+
+### 提交规范
+
+提交信息遵循以下格式：
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+常用type类型：
+- feat: 新功能
+- fix: 修复bug
+- docs: 文档更新
+- style: 代码格式调整
+- refactor: 代码重构
+- test: 测试相关
+- chore: 构建过程或辅助工具的变动
+
+示例：
+```
+feat(api): 添加离岗检测功能
+
+实现离岗检测核心算法，支持ROI区域设置和时间阈值配置
+
+Closes #123
+```
+
+### 工作流程
+
+1. 从develop分支创建feature分支
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feature/新功能名称
+```
+
+2. 开发并提交代码
+```bash
+git add .
+git commit -m "feat: 实现新功能"
+```
+
+3. 推送分支并创建Pull Request
+```bash
+git push origin feature/新功能名称
+```
+
+4. 代码审查通过后合并到develop分支
+
+## 前端路由
+
+前端采用React Router进行路由管理，包含以下页面：
+
+1. **首页** - `/` 
+   - 系统介绍和导航入口
+
+2. **视频上传** - `/upload`
+   - 视频文件选择和上传功能
+
+3. **行为检测** - `/detect`
+   - 检测参数设置和任务启动
+
+4. **任务状态** - `/status`
+   - 任务进度查看和结果下载
+
+路由配置文件位于 `frontend/src/routes/index.js`，与主应用组件分离以提高可维护性。
+
+## 后端路由
+
+API路由已按功能模块分离到独立文件中：
+
+1. **文件处理路由** - 位于 `api/routes/file_routes.py`
+   - `POST /upload/` - 上传文件
+   - `POST /process_video/` - 处理视频
+
+2. **任务管理路由** - 位于 `api/routes/task_routes.py`
+   - `GET /task_status/{task_id}` - 获取任务状态
+   - `GET /download_processed/{task_id}` - 下载处理后的视频
 
 ## 模块说明
 
 系统功能已按用途分类组织：
 
-1. **徘徊检测模块** - 位于 `detector/` 目录
-   - 核心实现在 `detector/core.py`
-   - 使用说明请查看 `detector/README.md`
+1. **核心算法模块** - 位于 `api/algorithms/` 目录
+   - 徘徊检测: `loitering_detection.py`
+   - 离岗检测: `leave_detection.py`
+   - 聚集检测: `gather_detection.py`
+   - 视频处理: `video_processor.py`
 
-2. **离岗和聚集检测模块** - 位于 `leave_gather_detection/` 目录
-   - 离岗检测: `leave.py`
-   - 人员聚集检测: `main.py`
-   - 综合检测: `whole.py`
-   - 使用说明请查看 `leave_gather_detection/README.md`
+2. **模型管理模块** - 位于 `api/models/` 目录
+   - YOLO模型管理: `yolo_models.py`
+
+3. **配置管理模块** - 位于 `api/config/` 目录
+   - 系统配置: `settings.py`
 
 ## 故障排除
 
@@ -77,6 +223,7 @@ python api/flask_app.py
 2. **ByteTrack跟踪器不可用**:
    - 确保已安装lap库: `pip install lap>=0.5.12`
    - 系统会自动检测并使用ByteTrack，如果不可用会回退到基础跟踪方法
+
 3. **CUDA相关问题**:
    - 如果没有GPU或CUDA不可用，系统会自动回退到CPU运行
    - 确保安装了正确版本的PyTorch和CUDA驱动
