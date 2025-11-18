@@ -27,11 +27,11 @@ const FileUploader = ({ onFileUploaded, uploadEndpoint, allowedTypes = '*' }) =>
         method: 'POST',
         body: formData
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setFileId(data.file_id);
       setUploadStatus(`上传成功! 文件ID: ${data.file_id}`);
@@ -44,10 +44,10 @@ const FileUploader = ({ onFileUploaded, uploadEndpoint, allowedTypes = '*' }) =>
   return (
     <div className="file-uploader">
       <div className="upload-controls">
-        <input 
-          type="file" 
-          accept={allowedTypes} 
-          onChange={handleFileChange} 
+        <input
+          type="file"
+          accept={allowedTypes}
+          onChange={handleFileChange}
         />
         <button onClick={handleUpload}>上传文件</button>
         <p className="status">{uploadStatus}</p>

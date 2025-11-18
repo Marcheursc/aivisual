@@ -6,7 +6,7 @@ const DetectionPage = () => {
   // 文件上传状态
   const [fileId, setFileId] = useState('');
   const [taskId, setTaskId] = useState('');
-  
+
   // 处理文件上传完成事件
   const handleFileUploaded = (fileId) => {
     setFileId(fileId);
@@ -23,11 +23,11 @@ const DetectionPage = () => {
       const response = await fetch(`http://localhost:8000/process_video/?file_id=${fileId}&${new URLSearchParams(params)}`, {
         method: 'POST'
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       setTaskId(data.task_id);
     } catch (error) {
@@ -84,11 +84,11 @@ const DetectionPage = () => {
   return (
     <div className="detection-page">
       <h1>视频检测</h1>
-      
+
       {/* 视频上传部分 */}
       <section className="upload-section">
         <h2>视频上传</h2>
-        <FileUploader 
+        <FileUploader
           onFileUploaded={handleFileUploaded}
           uploadEndpoint="http://localhost:8000/upload/"
           allowedTypes="video/*"
@@ -98,7 +98,7 @@ const DetectionPage = () => {
       {/* 检测控制部分 */}
       <section className="detection-section">
         <h2>检测控制</h2>
-        <DetectionControls 
+        <DetectionControls
           onStartDetection={handleStartDetection}
           detectionTypes={detectionTypes}
         />
@@ -107,7 +107,7 @@ const DetectionPage = () => {
       {/* 任务状态部分 */}
       <section className="status-section">
         <h2>任务状态</h2>
-        <TaskMonitor 
+        <TaskMonitor
           taskId={taskId}
           statusEndpoint="http://localhost:8000/task_status"
           downloadEndpoint="http://localhost:8000/download_processed"

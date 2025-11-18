@@ -65,14 +65,14 @@ async def process_video(
     # 解析ROI参数
     parsed_leave_roi = None
     parsed_gather_roi = None
-    
+
     if leave_roi:
         try:
             # 解析格式如: "[(600,100),(1000,100),(1000,700),(600,700)]"
             parsed_leave_roi = eval(leave_roi)
         except:
             pass
-            
+
     if gather_roi:
         try:
             # 解析格式如: "[(220,300),(700,300),(700,700),(200,700)]"
@@ -126,26 +126,26 @@ async def process_video_task(
     try:
         # 初始化视频处理器
         processor = VideoProcessor()
-        
+
         # 设置输出视频路径
         output_filename = f"processed_{uuid.uuid4()}.mp4"
         output_path = os.path.join(PROCESSED_DIR, output_filename)
-        
+
         # 处理视频
         result_path = processor.process_loitering_video(
             video_path=video_path,
             output_path=output_path,
             loitering_time_threshold=loitering_time_threshold
         )
-        
+
         # 标记为完成
         processing_tasks[task_id]["status"] = "completed"
         processing_tasks[task_id]["result_path"] = result_path
         processing_tasks[task_id]["camera_id"] = camera_id
-        
+
         # 保存报警信息（示例）
         # 在实际应用中，这里会根据检测结果生成报警信息并保存到数据库
-        
+
     except Exception as e:
         processing_tasks[task_id]["status"] = "failed"
         processing_tasks[task_id]["error"] = str(e)
@@ -162,11 +162,11 @@ async def process_leave_detection_task(
     try:
         # 初始化视频处理器
         processor = VideoProcessor()
-        
+
         # 设置输出视频路径
         output_filename = f"leave_processed_{uuid.uuid4()}.mp4"
         output_path = os.path.join(PROCESSED_DIR, output_filename)
-        
+
         # 处理视频
         result_path = processor.process_leave_video(
             video_path=video_path,
@@ -174,7 +174,7 @@ async def process_leave_detection_task(
             roi=roi,
             absence_threshold=threshold if threshold is not None else 5
         )
-        
+
         # 标记为完成
         processing_tasks[task_id]["status"] = "completed"
         processing_tasks[task_id]["result_path"] = result_path
@@ -196,11 +196,11 @@ async def process_gather_detection_task(
     try:
         # 初始化视频处理器
         processor = VideoProcessor()
-        
+
         # 设置输出视频路径
         output_filename = f"gather_processed_{uuid.uuid4()}.mp4"
         output_path = os.path.join(PROCESSED_DIR, output_filename)
-        
+
         # 处理视频
         result_path = processor.process_gather_video(
             video_path=video_path,
@@ -208,7 +208,7 @@ async def process_gather_detection_task(
             roi=roi,
             gather_threshold=threshold if threshold is not None else 5
         )
-        
+
         # 标记为完成
         processing_tasks[task_id]["status"] = "completed"
         processing_tasks[task_id]["result_path"] = result_path

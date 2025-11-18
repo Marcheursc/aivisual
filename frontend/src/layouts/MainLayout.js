@@ -13,16 +13,16 @@ const MainLayout = ({ children }) => {
           <nav className="main-navigation">
             <ul>
               <li>
-                <Link 
-                  to="/" 
+                <Link
+                  to="/"
                   className={location.pathname === '/' ? 'active' : ''}
                 >
                   首页
                 </Link>
               </li>
               <li>
-                <Link 
-                  to="/detection" 
+                <Link
+                  to="/detection"
                   className={location.pathname === '/detection' ? 'active' : ''}
                 >
                   视频检测
@@ -32,11 +32,11 @@ const MainLayout = ({ children }) => {
           </nav>
         </div>
       </header>
-      
+
       <main className="app-main">
         {children}
       </main>
-      
+
       <footer className="app-footer">
         <p>&copy; 2025 AI Visual Detection System. All rights reserved.</p>
       </footer>

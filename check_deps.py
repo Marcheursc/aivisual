@@ -12,15 +12,15 @@ def check_dependencies():
         "numpy": "NumPy科学计算库",
         "ultralytics": "Ultralytics YOLO实现",
     }
-    
+
     optional_deps = {
         "flash_attn": "Flash Attention优化库（可选，用于提升性能）",
         "timm": "PyTorch图像模型库",
     }
-    
+
     print("检查必需依赖...")
     all_good = True
-    
+
     for dep, description in dependencies.items():
         try:
             if dep == "cv2":
@@ -47,7 +47,7 @@ def check_dependencies():
         except ImportError:
             print(f"✗ {dep}: 未安装 - {description}")
             all_good = False
-    
+
     print("\n检查可选依赖...")
     for dep, description in optional_deps.items():
         try:
@@ -58,7 +58,7 @@ def check_dependencies():
                 print(f"✓ {dep}: 已安装 - {description}")
         except ImportError:
             print(f"⚠ {dep}: 未找到 - {description}")
-    
+
     return all_good
 
 def check_cuda():
@@ -90,7 +90,7 @@ def check_model_files():
         ("yolov12/yolov12l.pt", "YOLOv12 Large模型"),
         ("yolov12/yolov12x.pt", "YOLOv12 XL模型"),
     ]
-    
+
     print("\n检查模型文件...")
     for model_path, description in model_files:
         if os.path.exists(model_path):
@@ -102,11 +102,11 @@ def check_model_files():
 def main():
     print("YOLOv12 项目依赖检查")
     print("=" * 40)
-    
+
     deps_ok = check_dependencies()
     check_cuda()
     check_model_files()
-    
+
     print("\n" + "=" * 40)
     if deps_ok:
         print("✓ 所有必需依赖已正确安装")

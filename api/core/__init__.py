@@ -9,6 +9,6 @@ from ..algorithms.gather_detection import GatherDetector
 
 __all__ = [
     "LoiteringDetector",
-    "LeaveDetector", 
+    "LeaveDetector",
     "GatherDetector"
 ]

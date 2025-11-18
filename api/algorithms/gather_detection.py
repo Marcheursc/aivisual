@@ -15,7 +15,7 @@ class GatherDetector:
     def __init__(self, model_path="yolov12/yolov12n.pt", device='cuda'):
         """
         初始化聚集检测器
-        
+
         Args:
             model_path (str): YOLOv12模型路径
             device (str): 运行设备 ('cuda' 或 'cpu')
@@ -24,24 +24,24 @@ class GatherDetector:
         if device == 'cuda' and not torch.cuda.is_available():
             print("CUDA is not available, falling back to CPU")
             device = 'cpu'
-        
+
         # 加载YOLOv12模型
         self.model = YOLO(model_path)
         self.model.to(device)
-        
+
         # 设置检测类别为人员
         self.model.set_classes(["person"])
-        
+
         self.device = device
 
     def point_in_roi(self, point, roi):
         """
         判断点是否在ROI区域内（射线法）
-        
+
         Args:
             point: (x, y) 坐标
             roi: ROI区域顶点列表 [(x1, y1), (x2, y2), ...]
-            
+
         Returns:
             bool: 点是否在ROI内
         """
@@ -59,12 +59,12 @@ class GatherDetector:
     def detect_gather(self, frame, roi, gather_threshold):
         """
         检测人员聚集情况
-        
+
         Args:
             frame: 视频帧
             roi: ROI区域 [(x1, y1), (x2, y2), ...]
             gather_threshold: 聚集人数阈值
-            
+
         Returns:
             dict: 检测结果
         """

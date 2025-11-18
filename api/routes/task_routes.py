@@ -47,7 +47,7 @@ async def download_processed_video(task_id: str):
 
 @router.get("/alerts")
 async def query_alerts(
-    camera_ids: List[str] = Query(...), 
+    camera_ids: List[str] = Query(...),
     scene_type: str = Query(...),
     start_time: Optional[str] = None,
     end_time: Optional[str] = None
@@ -65,20 +65,20 @@ async def query_alerts(
         # 检查摄像头ID
         if alert["camera_id"] not in camera_ids:
             continue
-            
+
         # 检查场景类型
         if alert["scene_type"] != scene_type:
             continue
-            
+
         # 检查时间范围
         if start_time and alert["timestamp"] < start_time:
             continue
-            
+
         if end_time and alert["timestamp"] > end_time:
             continue
-            
+
         filtered_alerts.append(alert)
-    
+
     return JSONResponse(content=filtered_alerts)
 
 
@@ -92,8 +92,8 @@ async def stream_alerts():
     def generate():
         # 模拟实时报警推送
         yield f"data: {json.dumps({'message': '连接已建立，等待报警信息...'})}\n\n"
-        
+
         # 在实际应用中，这里会持续监听报警事件并推送
         # 例如通过消息队列或事件总线
-    
+
     return StreamingResponse(generate(), media_type="text/event-stream")

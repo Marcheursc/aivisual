@@ -10,11 +10,11 @@ import os
 def install_requirements():
     """安装requirements.txt中的依赖"""
     print("正在安装项目依赖...")
-    
+
     # 获取当前目录
     current_dir = os.path.dirname(os.path.abspath(__file__))
     requirements_path = os.path.join(current_dir, "requirements.txt")
-    
+
     try:
         # 尝试使用国内镜像源安装
         subprocess.check_call([
@@ -40,7 +40,7 @@ def install_pytorch_cuda():
     print("正在安装 PyTorch 2.8.0 + CUDA 12.8...")
     try:
         subprocess.check_call([
-            sys.executable, "-m", "pip", "install", 
+            sys.executable, "-m", "pip", "install",
             "torch==2.8.0", "torchvision==0.13.0", "torchaudio==2.0.0",
             "--index-url", "https://download.pytorch.org/whl/cu128"
         ])
@@ -99,7 +99,7 @@ def check_flash_attn():
 def main():
     print("YOLOv12 项目依赖安装脚本")
     print("=" * 40)
-    
+
     # 安装PyTorch
     if install_pytorch_cuda():
         # 安装lap库
@@ -109,7 +109,7 @@ def main():
                 # 检查关键依赖
                 check_pytorch_cuda()
                 check_flash_attn()
-                
+
                 print("\n所有依赖处理完成！")
                 print("现在可以运行项目了:")
                 print("  python main.py")

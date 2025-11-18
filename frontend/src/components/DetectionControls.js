@@ -26,8 +26,8 @@ const DetectionControls = ({ onStartDetection, detectionTypes, initialParams = {
       <div className="form-group">
         <label>
           检测类型:
-          <select 
-            value={detectionType} 
+          <select
+            value={detectionType}
             onChange={(e) => setDetectionType(e.target.value)}
           >
             {detectionTypes.map(type => (
@@ -38,7 +38,7 @@ const DetectionControls = ({ onStartDetection, detectionTypes, initialParams = {
           </select>
         </label>
       </div>
-      
+
       {/* 渲染动态参数输入框 */}
       {detectionTypes
         .find(type => type.value === detectionType)
@@ -46,7 +46,7 @@ const DetectionControls = ({ onStartDetection, detectionTypes, initialParams = {
           <div className="form-group" key={param.name}>
             <label>
               {param.label}:
-              <input 
+              <input
                 type={param.type || "number"}
                 value={params[param.name] || param.default || ''}
                 onChange={(e) => handleParamChange(param.name, e.target.value)}
@@ -59,7 +59,7 @@ const DetectionControls = ({ onStartDetection, detectionTypes, initialParams = {
           </div>
         ))
       }
-      
+
       <button onClick={handleStart}>开始检测</button>
     </div>
   );

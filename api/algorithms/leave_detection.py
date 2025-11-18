@@ -15,7 +15,7 @@ class LeaveDetector:
     def __init__(self, model_path="yolov12/yolov12n.pt", device='cuda'):
         """
         初始化离岗检测器
-        
+
         Args:
             model_path (str): YOLOv12模型路径
             device (str): 运行设备 ('cuda' 或 'cpu')
@@ -24,24 +24,24 @@ class LeaveDetector:
         if device == 'cuda' and not torch.cuda.is_available():
             print("CUDA is not available, falling back to CPU")
             device = 'cpu'
-        
+
         # 加载YOLOv12模型
         self.model = YOLO(model_path)
         self.model.to(device)
-        
+
         # 设置检测类别为人员
         self.model.set_classes(["person"])
-        
+
         self.device = device
 
     def point_in_roi(self, point, roi):
         """
         判断点是否在ROI区域内（射线法）
-        
+
         Args:
             point: (x, y) 坐标
             roi: ROI区域顶点列表 [(x1, y1), (x2, y2), ...]
-            
+
         Returns:
             bool: 点是否在ROI内
         """
@@ -59,13 +59,13 @@ class LeaveDetector:
     def detect_leave(self, frame, roi, absence_start_time, absence_threshold):
         """
         检测离岗情况
-        
+
         Args:
             frame: 视频帧
             roi: ROI区域 [(x1, y1), (x2, y2), ...]
             absence_start_time: 开始脱岗时间
             absence_threshold: 脱岗判定阈值（秒）
-            
+
         Returns:
             dict: 检测结果
         """
@@ -88,7 +88,7 @@ class LeaveDetector:
         # 更新状态检测逻辑
         current_time = datetime.now()
         status = "脱岗" if roi_person_count == 0 else "在岗"
-        
+
         if roi_person_count > 0:
             # 有人在岗，重置脱岗时间
             absence_start_time = None
@@ -97,9 +97,9 @@ class LeaveDetector:
             # 无人在岗
             if absence_start_time is None:
                 absence_start_time = current_time
-                
+
             absence_duration = (current_time - absence_start_time).total_seconds()
-            
+
             if absence_duration >= absence_threshold:
                 alert_triggered = True
             else:

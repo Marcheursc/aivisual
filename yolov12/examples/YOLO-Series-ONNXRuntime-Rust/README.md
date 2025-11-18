@@ -50,7 +50,7 @@ This repository provides a Rust demo for key YOLO-Series tasks such as `Classifi
 
 ### 3. \[Optional\] Install ffmpeg
 
-To view video frames and save video inferences, install `rust-ffmpeg`. For instructions, see:  
+To view video frames and save video inferences, install `rust-ffmpeg`. For instructions, see:
 [https://github.com/zmwangx/rust-ffmpeg/wiki/Notes-on-building#dependencies](https://github.com/zmwangx/rust-ffmpeg/wiki/Notes-on-building#dependencies)
 
 ## Get Started

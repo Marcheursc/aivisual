@@ -16,8 +16,8 @@ def upload_file(file_path):
 
 
 def process_video(
-    file_id, 
-    detection_type="loitering", 
+    file_id,
+    detection_type="loitering",
     loitering_time_threshold=20,
     leave_roi=None,
     leave_threshold=None,
@@ -32,7 +32,7 @@ def process_video(
         "loitering_time_threshold": loitering_time_threshold,
         "camera_id": camera_id
     }
-    
+
     # 添加可选参数
     if leave_roi is not None:
         data["leave_roi"] = leave_roi
@@ -42,7 +42,7 @@ def process_video(
         data["gather_roi"] = gather_roi
     if gather_threshold is not None:
         data["gather_threshold"] = gather_threshold
-        
+
     response = requests.post(f"{BASE_URL}/process_video/", data=data)
     return response.json()
 
@@ -122,8 +122,8 @@ def remove_camera(camera_id):
 
 # 报警查询相关函数
 def query_alerts(
-    camera_ids: List[str], 
-    scene_type: str, 
+    camera_ids: List[str],
+    scene_type: str,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None
 ):
@@ -132,12 +132,12 @@ def query_alerts(
         "camera_ids": camera_ids,
         "scene_type": scene_type
     }
-    
+
     if start_time:
         params["start_time"] = start_time
     if end_time:
         params["end_time"] = end_time
-        
+
     response = requests.get(f"{BASE_URL}/alerts", params=params)
     return response.json()
 

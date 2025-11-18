@@ -12,7 +12,7 @@ const theme = {
     dark: '#343a40',
     white: '#ffffff',
     black: '#000000',
-    
+
     // 灰色系列
     gray100: '#f8f9fa',
     gray200: '#e9ecef',
@@ -24,7 +24,7 @@ const theme = {
     gray800: '#343a40',
     gray900: '#212529',
   },
-  
+
   // 字体配置
   typography: {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -45,7 +45,7 @@ const theme = {
       bold: 700,
     },
   },
-  
+
   // 间距配置
   spacing: {
     xs: '4px',
@@ -55,7 +55,7 @@ const theme = {
     xl: '32px',
     '2xl': '48px',
   },
-  
+
   // 圆角配置
   borderRadius: {
     sm: '2px',
@@ -64,7 +64,7 @@ const theme = {
     xl: '16px',
     full: '50%',
   },
-  
+
   // 阴影配置
   boxShadow: {
     sm: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
