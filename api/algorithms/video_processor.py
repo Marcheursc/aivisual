@@ -12,6 +12,7 @@ from typing import Optional, List, Tuple
 from .loitering_detection import LoiteringDetector
 from .leave_detection import LeaveDetector
 from .gather_detection import GatherDetector
+from .banner_detection import BannerDetector
 
 
 class VideoProcessor:
@@ -60,6 +61,23 @@ class VideoProcessor:
             GatherDetector: 聚集检测器实例
         """
         return GatherDetector(model_path=self.model_path)
+
+    def _get_banner_detector(self, conf_threshold: float = 0.3, iou_threshold: float = 0.45):
+        """
+        获取横幅检测器实例
+
+        Args:
+            conf_threshold: 置信度阈值
+            iou_threshold: NMS IoU阈值
+
+        Returns:
+            BannerDetector: 横幅检测器实例
+        """
+        return BannerDetector(
+            model_path=self.model_path,
+            conf_threshold=conf_threshold,
+            iou_threshold=iou_threshold
+        )
 
     def process_loitering_video(self,
                                video_path: str,
@@ -113,6 +131,67 @@ class VideoProcessor:
 
             # 在帧上绘制检测结果
             annotated_frame = self._draw_loitering_detections(frame, detections, alarms)
+
+            # 写入处理后的帧
+            out.write(annotated_frame)
+
+        # 释放资源
+        cap.release()
+        out.release()
+
+        return output_path
+
+    def process_banner_video(self,
+                            video_path: str,
+                            output_path: str,
+                            conf_threshold: float = 0.3,
+                            iou_threshold: float = 0.45,
+                            device: str = 'cuda') -> str:
+        """
+        处理横幅检测视频
+
+        Args:
+            video_path: 输入视频路径
+            output_path: 输出视频路径
+            conf_threshold: 置信度阈值
+            iou_threshold: NMS IoU阈值
+            device: 运行设备
+
+        Returns:
+            str: 处理后的视频路径
+        """
+        # 初始化检测器
+        detector = BannerDetector(
+            model_path=self.model_path,
+            conf_threshold=conf_threshold,
+            iou_threshold=iou_threshold,
+            device=device
+        )
+
+        # 打开视频文件
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            raise Exception(f"无法打开视频文件: {video_path}")
+
+        # 获取视频参数
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # 初始化视频写入器
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            # 执行横幅检测
+            results, banners = detector.detect_banner(frame)
+
+            # 在帧上绘制检测结果
+            annotated_frame = self._draw_banner_detections(frame, banners)
 
             # 写入处理后的帧
             out.write(annotated_frame)
@@ -331,5 +410,34 @@ class VideoProcessor:
         if alert_triggered:
             cv2.putText(frame, "警告：人员聚集！", (30, 100),
                        cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+
+        return frame
+
+    def _draw_banner_detections(self, frame, banners):
+        """
+        在帧上绘制横幅检测结果
+        """
+        # 绘制检测框
+        for banner in banners:
+            x1, y1, x2, y2 = banner['box']
+            conf = banner['confidence']
+            cls_name = banner['class']
+
+            # 绘制检测框
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+            # 绘制标签和置信度
+            label_text = f"{cls_name}: {conf:.2f}"
+            # 绘制文本背景（提高可读性）
+            text_size = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)[0]
+            text_bg_x2 = x1 + text_size[0] + 6
+            text_bg_y2 = y1 - text_size[1] - 6
+            cv2.rectangle(frame, (x1, y1), (text_bg_x2, text_bg_y2), (0, 255, 0), -1)
+
+            # 绘制文本
+            cv2.putText(
+                frame, label_text, (x1 + 3, y1 - 3),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1
+            )
 
         return frame
