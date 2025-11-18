@@ -48,7 +48,7 @@ const DetectionControls = ({ onStartDetection, detectionTypes, initialParams = {
               {param.label}:
               <input
                 type={param.type || "number"}
-                value={params[param.name] || param.default || ''}
+                value={params[param.name] || params[param.name] === 0 ? params[param.name] : param.default || ''}
                 onChange={(e) => handleParamChange(param.name, e.target.value)}
                 min={param.min}
                 max={param.max}

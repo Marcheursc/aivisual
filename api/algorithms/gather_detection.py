@@ -12,13 +12,14 @@ import torch
 
 
 class GatherDetector:
-    def __init__(self, model_path="yolov12/yolov12n.pt", device='cuda'):
+    def __init__(self, model_path="yolov12/yolov12n.pt", device='cuda', img_size=640):
         """
         初始化聚集检测器
 
         Args:
             model_path (str): YOLOv12模型路径
             device (str): 运行设备 ('cuda' 或 'cpu')
+            img_size (int): 图像处理尺寸（较小的尺寸可以提高速度）
         """
         # 检查设备可用性
         if device == 'cuda' and not torch.cuda.is_available():
@@ -30,9 +31,11 @@ class GatherDetector:
         self.model.to(device)
 
         # 设置检测类别为人员
-        self.model.set_classes(["person"])
+        if hasattr(self.model, 'set_classes'):
+            self.model.set_classes(["person"])
 
         self.device = device
+        self.img_size = img_size
 
     def point_in_roi(self, point, roi):
         """

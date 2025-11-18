@@ -167,13 +167,27 @@ class VideoProcessor:
         absence_start_time = None
         alert_triggered = False
 
+        frame_count = 0
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
 
+            frame_count += 1
+            frame_time = frame_count / fps
+
+            # 调整图像尺寸以提高处理速度
+            h, w = frame.shape[:2]
+            scale = detector.img_size / max(h, w) if hasattr(detector, 'img_size') else 1
+            if scale < 1:
+                new_w, new_h = int(w * scale), int(h * scale)
+                processed_frame = cv2.resize(frame, (new_w, new_h))
+            else:
+                processed_frame = frame
+                scale = 1
+
             # 执行离岗检测
-            result = detector.detect_leave(frame, roi, absence_start_time, absence_threshold)
+            result = detector.detect_leave(processed_frame, roi, absence_start_time, absence_threshold)
             absence_start_time = result['absence_start_time']
 
             # 在帧上绘制检测结果
@@ -236,13 +250,27 @@ class VideoProcessor:
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
+        frame_count = 0
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
 
+            frame_count += 1
+            frame_time = frame_count / fps
+
+            # 调整图像尺寸以提高处理速度
+            h, w = frame.shape[:2]
+            scale = detector.img_size / max(h, w) if hasattr(detector, 'img_size') else 1
+            if scale < 1:
+                new_w, new_h = int(w * scale), int(h * scale)
+                processed_frame = cv2.resize(frame, (new_w, new_h))
+            else:
+                processed_frame = frame
+                scale = 1
+
             # 执行聚集检测
-            result = detector.detect_gather(frame, roi, gather_threshold)
+            result = detector.detect_gather(processed_frame, roi, gather_threshold)
 
             # 在帧上绘制检测结果
             annotated_frame = self._draw_gather_detections(

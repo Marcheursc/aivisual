@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileUploader, DetectionControls, TaskMonitor, Button } from '../../components';
+import { FileUploader, DetectionControls, TaskMonitor } from '../../components';
 import './Detection.css';
 
 const DetectionPage = () => {
@@ -20,7 +20,33 @@ const DetectionPage = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/process_video/?file_id=${fileId}&${new URLSearchParams(params)}`, {
+      // 构建查询参数
+      let url = `http://localhost:8000/process_video/?file_id=${fileId}`;
+
+      // 添加检测类型参数
+      if (params.detection_type) {
+        url += `&detection_type=${params.detection_type}`;
+      }
+
+      // 根据检测类型添加相应的参数
+      if (params.detection_type === 'loitering') {
+        url += `&detect_loitering=true`;
+        if (params.loitering_time_threshold) {
+          url += `&loitering_time_threshold=${params.loitering_time_threshold}`;
+        }
+      } else if (params.detection_type === 'gather') {
+        url += `&detect_loitering=false`;
+        if (params.gather_threshold) {
+          url += `&gather_threshold=${params.gather_threshold}`;
+        }
+      } else if (params.detection_type === 'leave') {
+        url += `&detect_loitering=false`;
+        if (params.leave_threshold) {
+          url += `&leave_threshold=${params.leave_threshold}`;
+        }
+      }
+
+      const response = await fetch(url, {
         method: 'POST'
       });
 

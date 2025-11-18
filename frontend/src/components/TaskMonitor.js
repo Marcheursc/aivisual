@@ -76,7 +76,7 @@ const TaskMonitor = ({ taskId, statusEndpoint, downloadEndpoint }) => {
             <h3>状态详情</h3>
             <p>状态: {taskStatus.status}</p>
             {taskStatus.progress !== undefined && <p>进度: {taskStatus.progress}%</p>}
-            {taskStatus.frame_count && <p>处理帧数: {taskStatus.frame_count}</p>}
+            {taskStatus.error && <p style={{color: 'red'}}>错误: {taskStatus.error}</p>}
           </div>
         )}
       </div>
