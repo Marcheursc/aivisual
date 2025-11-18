@@ -34,6 +34,7 @@ async def process_video(
         detect_loitering: bool = True,
         loitering_time_threshold: int = 20,
         detection_type: str = "loitering",
+        camera_id: str = "default",
         # 离岗和聚集检测的额外参数
         leave_roi: Optional[str] = None,
         leave_threshold: Optional[int] = None,
@@ -56,7 +57,9 @@ async def process_video(
     processing_tasks[task_id] = {
         "status": "processing",
         "progress": 0,
-        "result_path": None
+        "result_path": None,
+        "camera_id": camera_id,
+        "detection_type": detection_type
     }
 
     # 解析ROI参数
@@ -85,7 +88,8 @@ async def process_video(
             file_path,
             task_id,
             parsed_leave_roi,
-            leave_threshold
+            leave_threshold,
+            camera_id
         )
     elif detection_type == "gather":
         # 聚集检测
@@ -94,7 +98,8 @@ async def process_video(
             file_path,
             task_id,
             parsed_gather_roi,
-            gather_threshold
+            gather_threshold,
+            camera_id
         )
     else:
         # 默认为徘徊检测
@@ -103,7 +108,8 @@ async def process_video(
             file_path,
             task_id,
             detect_loitering,
-            loitering_time_threshold
+            loitering_time_threshold,
+            camera_id
         )
 
     return {"task_id": task_id, "message": f"{detection_type}视频处理已启动"}
@@ -113,7 +119,8 @@ async def process_video_task(
         video_path: str,
         task_id: str,
         detect_loitering: bool = True,
-        loitering_time_threshold: int = 20
+        loitering_time_threshold: int = 20,
+        camera_id: str = "default"
 ):
     """后台处理视频任务"""
     try:
@@ -134,6 +141,10 @@ async def process_video_task(
         # 标记为完成
         processing_tasks[task_id]["status"] = "completed"
         processing_tasks[task_id]["result_path"] = result_path
+        processing_tasks[task_id]["camera_id"] = camera_id
+        
+        # 保存报警信息（示例）
+        # 在实际应用中，这里会根据检测结果生成报警信息并保存到数据库
         
     except Exception as e:
         processing_tasks[task_id]["status"] = "failed"
@@ -144,7 +155,8 @@ async def process_leave_detection_task(
         video_path: str,
         task_id: str,
         roi: Optional[list] = None,
-        threshold: Optional[int] = None
+        threshold: Optional[int] = None,
+        camera_id: str = "default"
 ):
     """离岗检测处理任务"""
     try:
@@ -166,6 +178,7 @@ async def process_leave_detection_task(
         # 标记为完成
         processing_tasks[task_id]["status"] = "completed"
         processing_tasks[task_id]["result_path"] = result_path
+        processing_tasks[task_id]["camera_id"] = camera_id
 
     except Exception as e:
         processing_tasks[task_id]["status"] = "failed"
@@ -176,7 +189,8 @@ async def process_gather_detection_task(
         video_path: str,
         task_id: str,
         roi: Optional[list] = None,
-        threshold: Optional[int] = None
+        threshold: Optional[int] = None,
+        camera_id: str = "default"
 ):
     """聚集检测处理任务"""
     try:
@@ -198,6 +212,7 @@ async def process_gather_detection_task(
         # 标记为完成
         processing_tasks[task_id]["status"] = "completed"
         processing_tasks[task_id]["result_path"] = result_path
+        processing_tasks[task_id]["camera_id"] = camera_id
 
     except Exception as e:
         processing_tasks[task_id]["status"] = "failed"

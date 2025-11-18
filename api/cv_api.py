@@ -12,6 +12,7 @@ sys.path.insert(0, project_path)
 # 导入路由
 from api.routes.file_routes import router as file_router
 from api.routes.task_routes import router as task_router
+from api.routes.camera_routes import router as camera_router
 
 # 初始化 FastAPI 应用
 app = FastAPI(title="计算机视觉API",
@@ -29,6 +30,7 @@ app.add_middleware(
 # 注册路由
 app.include_router(file_router)
 app.include_router(task_router)
+app.include_router(camera_router)
 
 @app.get("/")
 async def root():

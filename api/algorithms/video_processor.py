@@ -6,6 +6,7 @@
 import cv2
 import numpy as np
 import os
+import json
 from datetime import datetime
 from typing import Optional, List, Tuple
 from .loitering_detection import LoiteringDetector
@@ -26,6 +27,39 @@ class VideoProcessor:
             model_path: 模型路径
         """
         self.model_path = model_path
+        
+    def _get_loitering_detector(self, loitering_time_threshold: int = 20):
+        """
+        获取徘徊检测器实例
+        
+        Args:
+            loitering_time_threshold: 徘徊时间阈值（秒）
+            
+        Returns:
+            LoiteringDetector: 徘徊检测器实例
+        """
+        return LoiteringDetector(
+            model_path=self.model_path,
+            loitering_time_threshold=loitering_time_threshold
+        )
+        
+    def _get_leave_detector(self):
+        """
+        获取离岗检测器实例
+        
+        Returns:
+            LeaveDetector: 离岗检测器实例
+        """
+        return LeaveDetector(model_path=self.model_path)
+        
+    def _get_gather_detector(self):
+        """
+        获取聚集检测器实例
+        
+        Returns:
+            GatherDetector: 聚集检测器实例
+        """
+        return GatherDetector(model_path=self.model_path)
         
     def process_loitering_video(self, 
                                video_path: str, 
@@ -258,8 +292,9 @@ class VideoProcessor:
         在帧上绘制离岗检测结果
         """
         # 绘制ROI区域
-        roi_np = np.array(roi, np.int32).reshape((-1, 1, 2))
-        cv2.polylines(frame, [roi_np], True, (0, 255, 0), 2)
+        if roi is not None:
+            roi_np = np.array(roi, np.int32).reshape((-1, 1, 2))
+            cv2.polylines(frame, [roi_np], True, (0, 255, 0), 2)
         
         # 绘制状态信息
         color = (0, 255, 0) if status == "在岗" else (0, 0, 255)
@@ -284,8 +319,9 @@ class VideoProcessor:
         在帧上绘制聚集检测结果
         """
         # 绘制ROI区域
-        roi_np = np.array(roi, np.int32).reshape((-1, 1, 2))
-        cv2.polylines(frame, [roi_np], True, (0, 255, 0), 2)
+        if roi is not None:
+            roi_np = np.array(roi, np.int32).reshape((-1, 1, 2))
+            cv2.polylines(frame, [roi_np], True, (0, 255, 0), 2)
         
         # 绘制人数信息
         cv2.putText(frame, f"ROI内人数: {person_count}", (30, 50), 
