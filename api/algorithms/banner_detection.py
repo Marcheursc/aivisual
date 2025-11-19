@@ -17,16 +17,18 @@ class BannerDetector:
         初始化横幅检测器
 
         Args:
-            model_path (str): YOLOv12模型路径，如果为None则使用best.pt
+            model_path (str): YOLOv12模型路径，如果为None则使用专用的横幅检测模型
             conf_threshold (float): 置信度阈值
             iou_threshold (float): NMS IoU阈值
             img_size (int): 图像处理尺寸
             device (str): 运行设备 ('cuda' 或 'cpu')
         """
-        # 如果没有提供模型路径，使用横幅检测专用的best.pt模型
+        # 如果没有提供模型路径，使用横幅检测专用模型
         if model_path is None:
-            model_path = "yolov12/best.pt"
-        
+            # 获取项目根目录
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            model_path = os.path.join(project_root, "yolov12", "banner_model.pt")
+
         print(f"[BannerDetector] 开始初始化，模型路径: {model_path}")
         try:
             # 检查设备可用性
@@ -36,19 +38,17 @@ class BannerDetector:
 
             print(f"[BannerDetector] 使用设备: {device}")
 
-            # 加载YOLOv12模型
-            print(f"[BannerDetector] 正在加载YOLO模型...")
-            self.model = YOLO(model_path)
+            # 使用 YOLOModelManager 加载模型
+            from api.models.yolo_models import YOLOModelManager
+            model_manager = YOLOModelManager(model_dir=os.path.join(project_root, "yolov12"))
+            self.model = model_manager.load_model(os.path.basename(model_path), device)
             self.device = device
-
-            # 将模型移动到指定设备
-            self.model.to(device)
 
             # 打印模型信息
             print(f"[BannerDetector] 模型加载成功!")
             print(f"[BannerDetector] 可用类别总数: {len(self.model.names)}")
             print(f"[BannerDetector] 所有类别: {list(self.model.names.values())}")
-            
+
         except Exception as e:
             print(f"[BannerDetector] 模型加载错误: {e}")
             print("[BannerDetector] 请确保已下载YOLOv12模型文件")
@@ -58,7 +58,7 @@ class BannerDetector:
         self.conf_threshold = conf_threshold
         self.iou_threshold = iou_threshold
         self.img_size = img_size
-        
+
         # 绘制参数（与bannerdetect.py保持一致）
         self.SHOW_LABEL = True  # 是否显示检测标签
         self.SHOW_CONF = True  # 是否显示置信度
@@ -103,14 +103,14 @@ class BannerDetector:
                     conf = box.conf[0].item()
                     cls = int(box.cls[0].item())
                     cls_name = self.model.names[cls]  # 类别名称
-                    
+
                     # 存储检测信息（与bannerdetect.py完全一致）
                     banners.append({
                         'box': (x1, y1, x2, y2),
                         'confidence': conf,
                         'class': cls_name
                     })
-        
+
         # 更新检测到的信息
         self.detected_banners = banners
 
@@ -132,10 +132,10 @@ class BannerDetector:
             x1, y1, x2, y2 = banner['box']
             conf = banner['confidence']
             cls_name = banner['class']
-            
+
             # 绘制检测框
             cv2.rectangle(frame, (x1, y1), (x2, y2), self.BOX_COLOR, self.LINE_WIDTH)
-            
+
             # 绘制标签和置信度（完全按照bannerdetect.py的方式）
             if self.SHOW_LABEL or self.SHOW_CONF:
                 label_text = ""
@@ -143,21 +143,21 @@ class BannerDetector:
                     label_text += cls_name
                 if self.SHOW_CONF:
                     label_text += f" ({conf:.2f})" if label_text else f"{conf:.2f}"
-                
+
                 # 绘制文本背景（提高可读性）
                 text_size = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, 1)[0]
                 text_bg_x2 = x1 + text_size[0] + 6
                 text_bg_y2 = y1 - text_size[1] - 6
                 cv2.rectangle(frame, (x1, y1), (text_bg_x2, text_bg_y2), self.BOX_COLOR, -1)
-                
+
                 # 绘制文本
                 cv2.putText(
                     frame, label_text, (x1 + 3, y1 - 3),
                     cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, self.TEXT_COLOR, 1
                 )
-        
+
         # 添加帧信息（左上角，完全按照bannerdetect.py的方式）
         frame_info = f"YOLOv12 Banner Detection | Conf: {self.conf_threshold}"
         cv2.putText(frame, frame_info, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        
+
         return frame

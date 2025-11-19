@@ -6,9 +6,11 @@
 from ..algorithms.loitering_detection import LoiteringDetector
 from ..algorithms.leave_detection import LeaveDetector
 from ..algorithms.gather_detection import GatherDetector
+from ..algorithms.banner_detection import BannerDetector
 
 __all__ = [
     "LoiteringDetector",
     "LeaveDetector",
-    "GatherDetector"
+    "GatherDetector",
+    "BannerDetector"
 ]
