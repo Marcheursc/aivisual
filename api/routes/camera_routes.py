@@ -225,7 +225,7 @@ async def remove_camera(camera_id: str):
     return JSONResponse(content={"message": f"摄像头 {camera_id} 已成功删除", "camera": removed_camera})
 
 
-@router.post("/process_camera/")
+@router.post("/cameras/process_camera/")
 async def process_camera(
         camera_id: str = "default",
         detection_type: str = "loitering",
@@ -233,7 +233,10 @@ async def process_camera(
         leave_roi: Optional[str] = None,
         leave_threshold: Optional[int] = None,
         gather_roi: Optional[str] = None,
-        gather_threshold: Optional[int] = None
+        gather_threshold: Optional[int] = None,
+        banner_roi: Optional[str] = None,
+        banner_conf_threshold: Optional[float] = None,
+        banner_iou_threshold: Optional[float] = None
 ):
     """
     实时处理摄像头视频流
@@ -248,6 +251,7 @@ async def process_camera(
     # 解析ROI参数
     parsed_leave_roi = None
     parsed_gather_roi = None
+    parsed_banner_roi = None
 
     if leave_roi:
         try:
@@ -263,6 +267,13 @@ async def process_camera(
         except:
             pass
 
+    if banner_roi:
+        try:
+            # 解析格式如: "[(0,0),(1280,0),(1280,720),(0,720)]"
+            parsed_banner_roi = eval(banner_roi)
+        except:
+            pass
+
     # 根据检测类型选择不同的处理函数
     if detection_type == "leave":
         # 离岗检测
@@ -274,6 +285,12 @@ async def process_camera(
         # 聚集检测
         return StreamingResponse(
             process_camera_gather_stream(camera_id, parsed_gather_roi, gather_threshold),
+            media_type="multipart/x-mixed-replace; boundary=frame"
+        )
+    elif detection_type == "banner":
+        # 横幅检测
+        return StreamingResponse(
+            process_camera_banner_stream(camera_id, parsed_banner_roi, banner_conf_threshold, banner_iou_threshold),
             media_type="multipart/x-mixed-replace; boundary=frame"
         )
     else:
@@ -418,6 +435,49 @@ def process_camera_gather_stream(camera_id: str, roi: Optional[list] = None, thr
             for box in result['person_boxes']:
                 x1, y1, x2, y2 = box.astype(int)
                 cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+            # 编码帧
+            _, buffer = cv2.imencode('.jpg', annotated_frame)
+            frame_bytes = buffer.tobytes()
+
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+    finally:
+        cap.release()
+
+
+def process_camera_banner_stream(camera_id: str, roi: Optional[list] = None,
+                                conf_threshold: Optional[float] = None,
+                                iou_threshold: Optional[float] = None):
+    """处理摄像头横幅检测视频流"""
+    # 初始化视频处理器
+    processor = VideoProcessor()
+
+    # 获取摄像头源
+    camera_source = get_camera_source(camera_id)
+
+    # 打开摄像头
+    cap = cv2.VideoCapture(camera_source)
+    if not cap.isOpened():
+        raise HTTPException(status_code=500, detail=f"无法打开摄像头 {camera_id} (源: {camera_source})")
+
+    try:
+        # 初始化检测器
+        detector = processor._get_banner_detector(
+            conf_threshold=conf_threshold if conf_threshold is not None else 0.5,
+            iou_threshold=iou_threshold if iou_threshold is not None else 0.45
+        )
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            # 执行横幅检测
+            results, banners = detector.detect_banner(frame)
+
+            # 在帧上绘制检测结果
+            annotated_frame = processor._draw_banner_detections(frame, banners)
 
             # 编码帧
             _, buffer = cv2.imencode('.jpg', annotated_frame)

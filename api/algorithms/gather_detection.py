@@ -31,15 +31,16 @@ class GatherDetector:
             print("CUDA is not available, falling back to CPU")
             device = 'cpu'
 
-        # 加载YOLOv12模型
-        self.model = YOLO(model_path)
-        self.model.to(device)
+        # 使用 YOLOModelManager 加载模型
+        from api.models.yolo_models import YOLOModelManager
+        model_manager = YOLOModelManager(model_dir=os.path.dirname(model_path) or "yolov12")
+        self.model = model_manager.load_model(os.path.basename(model_path), device)
+        self.device = device
 
         # 设置检测类别为人员
         if hasattr(self.model, 'set_classes'):
             self.model.set_classes(["person"])
 
-        self.device = device
         self.img_size = img_size
 
     def point_in_roi(self, point, roi):

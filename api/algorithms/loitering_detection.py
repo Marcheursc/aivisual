@@ -82,12 +82,11 @@ class LoiteringDetector:
 
             print(f"Using device: {device}")
 
-            # 加载YOLOv12模型
-            self.model = YOLO(model_path)
+            # 使用 YOLOModelManager 加载模型
+            from api.models.yolo_models import YOLOModelManager
+            model_manager = YOLOModelManager(model_dir=os.path.dirname(model_path) or "yolov12")
+            self.model = model_manager.load_model(os.path.basename(model_path), device)
             self.device = device
-
-            # 将模型移动到指定设备
-            self.model.to(device)
 
             # 设置检测类别
             self.target_classes = target_classes
