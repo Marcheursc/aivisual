@@ -9,6 +9,11 @@ import os
 from datetime import datetime
 from ultralytics import YOLO
 import torch
+import logging
+
+# 设置日志配置
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class GatherDetector:
@@ -71,13 +76,19 @@ class GatherDetector:
         Returns:
             dict: 检测结果
         """
-        # 检测行人
-        results = self.model(frame, classes=[0], verbose=False)
+        logger.info(f"开始聚集检测，ROI: {roi}, 阈值: {gather_threshold}")
+
+        # 检测行人，降低置信度阈值提高检测灵敏度
+        results = self.model(frame, classes=[0], conf=0.1, verbose=False)
+        logger.info(f"YOLO检测结果: 检测到 {len(results[0].boxes)} 个目标")
+
         person_boxes = []
         for box in results[0].boxes:
             cls = int(box.cls[0])
             if cls == 0:  # 只处理人员类别
                 person_boxes.append(box.xyxy.cpu().numpy()[0])
+
+        logger.info(f"检测到人员数量: {len(person_boxes)}")
 
         # 统计ROI内人数
         roi_person_count = 0
@@ -87,8 +98,12 @@ class GatherDetector:
             if self.point_in_roi(center, roi):
                 roi_person_count += 1
 
+        logger.info(f"ROI内人数: {roi_person_count}")
+
         # 判断是否触发聚集警报
         alert_triggered = roi_person_count >= gather_threshold
+
+        logger.info(f"聚集检测结果: {roi_person_count} >= {gather_threshold} = {alert_triggered}")
 
         return {
             'roi_person_count': roi_person_count,

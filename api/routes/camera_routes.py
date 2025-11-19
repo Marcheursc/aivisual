@@ -87,7 +87,7 @@ async def assign_camera_to_scene(camera_id: str, scene_type: str):
         raise HTTPException(status_code=404, detail="摄像头未找到")
 
     # 验证场景类型
-    if scene_type not in ["loitering", "leave", "gather"]:
+    if scene_type not in ["loitering", "leave", "gather", "banner"]:
         raise HTTPException(status_code=400, detail="无效的场景类型")
 
     # 分配场景
