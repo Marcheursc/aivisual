@@ -27,7 +27,7 @@ class LeaveDetector:
             device = 'cpu'
 
         # 使用 YOLOModelManager 加载模型
-        from api.models.yolo_models import YOLOModelManager
+        from ...models.yolo_models import YOLOModelManager
         model_manager = YOLOModelManager(model_dir=os.path.dirname(model_path) or "yolov12")
         self.model = model_manager.load_model(os.path.basename(model_path), device)
         self.device = device

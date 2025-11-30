@@ -4,20 +4,11 @@
 """
 
 from typing import Optional, List, Tuple
-import cv2
-import numpy as np
-from datetime import datetime
 from ..video_processing.core import VideoProcessorCore
-from ..video_processing.utils import draw_roi, draw_detection_box, put_text
+from ..video_processing.utils import draw_detection_box, put_text
 from .detector import LeaveDetector
-
-# 中文显示支持
-try:
-    from PIL import Image, ImageDraw, ImageFont
-
-    PIL_AVAILABLE = True
-except ImportError:
-    PIL_AVAILABLE = False
+import numpy as np
+import cv2
 
 
 def process_leave_video(
@@ -97,59 +88,14 @@ def process_leave_video(
     return output_path
 
 
-def draw_leave_detections(frame, roi, status, person_count,
-                          absence_start_time, absence_threshold, alert_triggered):
+def draw_leave_detections(frame, roi, status, roi_person_count, absence_start_time, threshold, alert_triggered):
     """
     在帧上绘制离岗检测结果
     """
     # 绘制ROI区域
-    frame = draw_roi(frame, roi)
-
-    # 使用PIL绘制中文文字
-    if PIL_AVAILABLE:
-        # 转换OpenCV图像到PIL格式
-        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        draw = ImageDraw.Draw(pil_image)
-
-        # 尝试使用系统中文字体
-        try:
-            font_path = "C:/Windows/Fonts/simhei.ttf"  # 黑体
-            font = ImageFont.truetype(font_path, 32)
-            small_font = ImageFont.truetype(font_path, 24)
-        except:
-            try:
-                font_path = "C:/Windows/Fonts/msyh.ttc"  # 微软雅黑
-                font = ImageFont.truetype(font_path, 32)
-                small_font = ImageFont.truetype(font_path, 24)
-            except:
-                font = ImageFont.load_default()
-                small_font = ImageFont.load_default()
-
-        # 绘制状态信息
-        color = (0, 255, 0) if status == "在岗" else (255, 0, 0)
-        draw.text((30, 30), f"状态: {status}", font=font, fill=color)
-
-        # 绘制脱岗时长
-        if absence_start_time is not None:
-            absence_duration = (datetime.now() - absence_start_time).total_seconds()
-            draw.text((30, 70), f"脱岗时长: {absence_duration:.1f}秒", font=small_font, fill=(255, 0, 0))
-
-        # 绘制警报
-        if alert_triggered:
-            draw.text((frame.shape[1] // 2 - 150, 30), "⚠️ 警告：人员脱岗！", font=font, fill=(255, 0, 0))
-
-        # 转换回OpenCV格式
-        frame[:] = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
-    else:
-        # 如果PIL不可用，使用英文替代
-        color = (0, 255, 0) if status == "在岗" else (0, 0, 255)
-        frame = put_text(frame, f"Status: {status}", (30, 50), 1, color, 2)
-
-        if absence_start_time is not None:
-            absence_duration = (datetime.now() - absence_start_time).total_seconds()
-            frame = put_text(frame, f"Absence: {absence_duration:.1f}s", (30, 100), 1, (0, 0, 255), 2)
-
-        if alert_triggered:
-            frame = put_text(frame, "WARNING: Person Left!", (frame.shape[1] // 2 - 150, 50), 1.5, (0, 0, 255), 3)
+    if len(roi) >= 3:
+        pts = np.array(roi, np.int32)
+        pts = pts.reshape((-1, 1, 2))
+        cv2.polylines(frame, [pts], True, (0, 255, 0), 2)
 
     return frame

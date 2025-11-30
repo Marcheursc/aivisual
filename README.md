@@ -55,6 +55,14 @@ project/
 ├── docker-compose.yml       # Docker 容器编排配置
 └── requirements.txt         # Python 依赖
 ```
+## 快速开始
+```bash
+git clone https://github.com/yourusername/Detect-Engine.git
+# 在项目根目录下运行：
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
 
 ## 安装依赖
 
@@ -98,6 +106,11 @@ npm start
 ```bash
 # 使用docker-compose一键部署
 docker-compose up --build
+```
+
+```bash
+# RabbitMQ
+docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4-management
 ```
 
 访问地址：

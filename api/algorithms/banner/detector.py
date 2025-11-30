@@ -9,6 +9,7 @@ import sys
 import torch
 import os
 from ultralytics import YOLO
+import time
 
 
 class BannerDetector:
@@ -70,6 +71,10 @@ class BannerDetector:
         self.iou_threshold = iou_threshold
         self.img_size = img_size
 
+        # 告警频率控制
+        self.last_alarm_time = 0
+        self.alarm_interval = 10  # 告警间隔时间（秒）
+
         # 绘制参数
         self.SHOW_LABEL = True  # 是否显示检测标签
         self.SHOW_CONF = True  # 是否显示置信度
@@ -124,6 +129,16 @@ class BannerDetector:
 
         # 更新检测到的信息
         self.detected_banners = banners
+
+        # 告警频率控制 - 只有在有检测结果且距离上次告警超过间隔时间时才触发告警
+        current_time = time.time()
+        should_trigger_alarm = (
+            len(banners) > 0 and 
+            (current_time - self.last_alarm_time) >= self.alarm_interval
+        )
+        
+        if should_trigger_alarm:
+            self.last_alarm_time = current_time
 
         return results, banners
 

@@ -77,7 +77,7 @@ def draw_loitering_detections(frame, detections, alarms):
     在帧上绘制徘徊检测结果
     """
     # 创建一个集合来存储触发警报的对象ID
-    alarm_object_ids = set(alarm['object_id'] for alarm in alarms.values())
+    alarm_object_ids = set(alarms.keys())
 
     # 绘制检测框
     for detection in detections:

@@ -10,6 +10,7 @@ from datetime import datetime
 from ultralytics import YOLO
 import torch
 import logging
+import time
 
 # 设置日志配置
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -32,7 +33,7 @@ class GatherDetector:
             device = 'cpu'
 
         # 使用 YOLOModelManager 加载模型
-        from api.models.yolo_models import YOLOModelManager
+        from ...models.yolo_models import YOLOModelManager
         model_manager = YOLOModelManager(model_dir=os.path.dirname(model_path) or "yolov12")
         self.model = model_manager.load_model(os.path.basename(model_path), device)
         self.device = device
@@ -42,6 +43,10 @@ class GatherDetector:
             self.model.set_classes(["person"])
 
         self.img_size = img_size
+        
+        # 用于控制告警频率的变量
+        self.last_alarm_time = 0
+        self.alarm_interval = 10  # 告警间隔时间（秒）
 
     def point_in_roi(self, point, roi):
         """
@@ -102,8 +107,18 @@ class GatherDetector:
         # ROI内人数
         roi_person_count = len(roi_person_boxes)
 
-        # 判断是否触发聚集警报
-        alert_triggered = roi_person_count >= gather_threshold
+        # 判断是否触发聚集警报（带频率控制）
+        current_time = time.time()
+        should_trigger_alert = (
+            roi_person_count >= gather_threshold and 
+            (current_time - self.last_alarm_time) >= self.alarm_interval
+        )
+        
+        alert_triggered = False
+        if should_trigger_alert:
+            alert_triggered = True
+            self.last_alarm_time = current_time
+            logger.info(f"触发聚集告警，已更新上次告警时间")
 
         logger.info(f"聚集检测结果: {roi_person_count} >= {gather_threshold} = {alert_triggered}")
 

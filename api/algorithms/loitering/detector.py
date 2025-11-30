@@ -115,6 +115,12 @@ class LoiteringDetector:
         self.tracked_objects = {}
         self.loitering_alarms = {}
 
+        # 用于控制告警频率的字典，记录每个对象上次发送告警的时间
+        self.last_alarm_times = {}
+
+        # 告警间隔时间（秒）
+        self.alarm_interval = 10  # 每10秒最多发送一次告警
+
         # 跟踪ID计数器
         self.next_object_id = 0
 
@@ -235,6 +241,31 @@ class LoiteringDetector:
             self.next_object_id += 1
             return new_id
 
+    def calculate_iou(self, box1, box2):
+        """
+        计算两个边界框的交并比(IoU)
+
+        Args:
+            box1, box2: 边界框坐标 [x1, y1, x2, y2]
+
+        Returns:
+            iou: 交并比
+        """
+        x1 = max(box1[0], box2[0])
+        y1 = max(box1[1], box2[1])
+        x2 = min(box1[2], box2[2])
+        y2 = min(box1[3], box2[3])
+
+        intersection_area = max(0, x2 - x1) * max(0, y2 - y1)
+
+        box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
+        box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
+
+        union_area = box1_area + box2_area - intersection_area
+
+        iou = intersection_area / union_area if union_area > 0 else 0
+        return iou
+
     def update_tracked_objects(self, detections, frame_time):
         """
         更新跟踪对象信息
@@ -244,6 +275,7 @@ class LoiteringDetector:
             frame_time: 当前帧时间
         """
         current_frame_objects = set()
+        current_alarms = {}
 
         # 处理当前帧的检测结果
         for detection in detections:
@@ -298,23 +330,41 @@ class LoiteringDetector:
                                 total_time = frame_time - first_seen_time
 
                                 if total_time > self.loitering_time_threshold and total_distance < 50:  # 50像素作为移动阈值
-                                    self.loitering_alarms[object_id] = {
-                                        'start_time': first_seen_time,
-                                        'current_time': frame_time,
-                                        'duration': total_time,
-                                        'position': box,
-                                        'class': class_name,
-                                        'object_id': object_id  # 添加对象ID到警报信息中
-                                    }
+                                    # 检查是否应该发送告警（根据告警间隔时间）
+                                    should_send_alarm = True
+                                    current_time = frame_time
+                                    
+                                    if object_id in self.last_alarm_times:
+                                        time_since_last_alarm = current_time - self.last_alarm_times[object_id]
+                                        if time_since_last_alarm < self.alarm_interval:
+                                            should_send_alarm = False
+                                    
+                                    # 如果应该发送告警，则记录当前时间并添加到告警列表
+                                    if should_send_alarm:
+                                        self.last_alarm_times[object_id] = current_time
+                                        current_alarms[object_id] = {
+                                            'start_time': first_seen_time,
+                                            'current_time': frame_time,
+                                            'duration': total_time,
+                                            'position': box,
+                                            'class': class_name
+                                        }
                                 # 如果移动距离较大，且之前有警报，则移除警报
                                 elif total_distance >= 50 and object_id in self.loitering_alarms:
                                     del self.loitering_alarms[object_id]
 
-        # 移除不在当前帧中的对象的警报
-        removed_objects = set(self.loitering_alarms.keys()) - current_frame_objects
+        # 更新当前的告警列表
+        self.loitering_alarms = current_alarms
+
+        # 移除不在当前帧中的对象的相关信息
+        removed_objects = set(self.tracked_objects.keys()) - current_frame_objects
         for obj_id in removed_objects:
+            if obj_id in self.tracked_objects:
+                del self.tracked_objects[obj_id]
             if obj_id in self.loitering_alarms:
                 del self.loitering_alarms[obj_id]
+            if obj_id in self.last_alarm_times:
+                del self.last_alarm_times[obj_id]
 
     def detect_loitering(self, frame, frame_time):
         """

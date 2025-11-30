@@ -4,20 +4,11 @@
 """
 
 from typing import Optional, List, Tuple
+from ..video_processing.core import VideoProcessorCore
+from ..video_processing.utils import draw_detection_box, put_text
+from .detector import GatherDetector
 import cv2
 import numpy as np
-from datetime import datetime
-from ..video_processing.core import VideoProcessorCore
-from ..video_processing.utils import draw_roi, draw_detection_box, put_text
-from .detector import GatherDetector
-
-# 中文显示支持
-try:
-    from PIL import Image, ImageDraw, ImageFont
-
-    PIL_AVAILABLE = True
-except ImportError:
-    PIL_AVAILABLE = False
 
 
 def process_gather_video(
@@ -91,47 +82,14 @@ def process_gather_video(
     return output_path
 
 
-def draw_gather_detections(frame, roi, person_count, gather_threshold, alert_triggered):
+def draw_gather_detections(frame, roi, roi_person_count, gather_threshold, alert_triggered):
     """
     在帧上绘制聚集检测结果
     """
     # 绘制ROI区域
-    frame = draw_roi(frame, roi)
-
-    # 使用PIL绘制中文文字
-    if PIL_AVAILABLE:
-        # 转换OpenCV图像到PIL格式
-        pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        draw = ImageDraw.Draw(pil_image)
-
-        # 尝试使用系统中文字体
-        try:
-            # Windows系统常用中文字体
-            font_path = "C:/Windows/Fonts/simhei.ttf"  # 黑体
-            font = ImageFont.truetype(font_path, 32)
-        except:
-            try:
-                # 备用字体
-                font_path = "C:/Windows/Fonts/msyh.ttc"  # 微软雅黑
-                font = ImageFont.truetype(font_path, 32)
-            except:
-                # 如果都找不到，使用默认字体
-                font = ImageFont.load_default()
-
-        # 绘制人数信息
-        draw.text((30, 30), f"ROI内人数: {person_count}", font=font, fill=(255, 0, 0))
-
-        # 绘制警报
-        if alert_triggered:
-            draw.text((30, 80), "警告：人员聚集！", font=font, fill=(255, 0, 0))
-
-        # 转换回OpenCV格式
-        frame[:] = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
-    else:
-        # 如果PIL不可用，使用英文替代
-        frame = put_text(frame, f"ROI Persons: {person_count}", (30, 50), 1, (255, 0, 0), 2)
-
-        if alert_triggered:
-            frame = put_text(frame, "WARNING: Crowd Detected!", (30, 100), 1.2, (0, 0, 255), 3)
+    if len(roi) >= 3:
+        pts = np.array(roi, np.int32)
+        pts = pts.reshape((-1, 1, 2))
+        cv2.polylines(frame, [pts], True, (0, 255, 0), 2)
 
     return frame

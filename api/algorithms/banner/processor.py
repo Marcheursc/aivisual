@@ -4,10 +4,10 @@
 """
 
 from typing import Optional, List, Tuple
-import cv2
 from ..video_processing.core import VideoProcessorCore
-from ..video_processing.utils import draw_detection_box, draw_text_background
+from ..video_processing.utils import draw_detection_box, put_text
 from .detector import BannerDetector
+import cv2
 
 
 def process_banner_video(
@@ -104,23 +104,13 @@ def draw_banner_detections(frame, banners):
     """
     在帧上绘制横幅检测结果
     """
-    # 绘制检测框
+    # 绘制检测到的横幅边界框
     for banner in banners:
-        x1, y1, x2, y2 = banner['box']
-        conf = banner['confidence']
-        cls_name = banner['class']
-
-        # 绘制检测框
-        frame = draw_detection_box(frame, [x1, y1, x2, y2], (0, 255, 0), 2)
-
-        # 绘制标签和置信度
-        label_text = ""
-        if True:  # SHOW_LABEL
-            label_text += cls_name
-        if True:  # SHOW_CONF
-            label_text += f" ({conf:.2f})" if label_text else f"{conf:.2f}"
-
-        # 绘制文本背景（提高可读性）
-        frame = draw_text_background(frame, label_text, (x1, y1), 0.6, (255, 255, 255), (0, 255, 0))
+        x1, y1, x2, y2 = map(int, banner['box'])
+        confidence = banner['confidence']
+        class_name = banner['class']
+        
+        frame = draw_detection_box(frame, [x1, y1, x2, y2], (0, 0, 255), 2)
+        frame = put_text(frame, f'{class_name}: {confidence:.2f}', (x1, y1 - 10), 0.5, (0, 0, 255), 2)
 
     return frame

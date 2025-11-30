@@ -252,3 +252,241 @@ class CameraService:
         else:
             # 默认使用系统摄像头0
             return 0
+
+    def process_loitering_stream(self, camera_id: str, loitering_time_threshold: int = 20):
+        """
+        处理摄像头徘徊检测视频流
+
+        Args:
+            camera_id: 摄像头ID
+            loitering_time_threshold: 徘徊时间阈值（秒）
+
+        Yields:
+            bytes: 编码后的视频帧
+        """
+        from ..algorithms import VideoProcessingCoordinator
+        import cv2
+
+        # 初始化视频处理器
+        processor = VideoProcessingCoordinator(camera_id=camera_id)
+
+        # 获取摄像头源
+        camera_source = self.get_camera_source(camera_id)
+
+        # 打开摄像头
+        cap = cv2.VideoCapture(camera_source)
+        if not cap.isOpened():
+            raise Exception(f"无法打开摄像头 {camera_id} (源: {camera_source})")
+
+        try:
+            # 初始化检测器
+            detector = processor._get_loitering_detector(loitering_time_threshold=loitering_time_threshold)
+
+            frame_count = 0
+            fps = cap.get(cv2.CAP_PROP_FPS) or 30  # 默认FPS为30
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                frame_count += 1
+                frame_time = frame_count / fps
+
+                # 执行徘徊检测
+                detections, alarms = detector.detect_loitering(frame, frame_time)
+
+                # 在帧上绘制检测结果
+                annotated_frame = processor._draw_loitering_detections(frame, detections, alarms)
+
+                # 编码帧
+                _, buffer = cv2.imencode('.jpg', annotated_frame)
+                frame_bytes = buffer.tobytes()
+
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+        finally:
+            cap.release()
+
+    def process_leave_stream(self, camera_id: str, roi: list = None, threshold: int = None):
+        """
+        处理摄像头离岗检测视频流
+
+        Args:
+            camera_id: 摄像头ID
+            roi: ROI区域
+            threshold: 阈值
+
+        Yields:
+            bytes: 编码后的视频帧
+        """
+        from ..algorithms import VideoProcessingCoordinator
+        import cv2
+
+        # 初始化视频处理器
+        processor = VideoProcessingCoordinator(camera_id=camera_id)
+
+        # 获取摄像头源
+        camera_source = self.get_camera_source(camera_id)
+
+        # 打开摄像头
+        cap = cv2.VideoCapture(camera_source)
+        if not cap.isOpened():
+            raise Exception(f"无法打开摄像头 {camera_id} (源: {camera_source})")
+
+        try:
+            # 初始化检测器
+            detector = processor._get_leave_detector()
+
+            # 设置默认ROI区域（如果没有通过参数传递）
+            if roi is None:
+                # 默认ROI区域可以根据您的需要修改
+                roi = [(220, 300), (700, 300), (700, 700), (200, 700)]
+
+            # 状态变量
+            absence_start_time = None
+            alert_triggered = False
+
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                # 执行离岗检测
+                result = detector.detect_leave(frame, roi, absence_start_time, threshold if threshold is not None else 5)
+                absence_start_time = result['absence_start_time']
+
+                # 在帧上绘制检测结果
+                annotated_frame = processor._draw_leave_detections(
+                    frame, roi, result['status'], result['roi_person_count'],
+                    absence_start_time, threshold if threshold is not None else 5, result['alert_triggered']
+                )
+
+                # 绘制检测到的人员框
+                for box in result['person_boxes']:  # 绘制所有检测到的人员框
+                    x1, y1, x2, y2 = box.astype(int)
+                    cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+                # 编码帧
+                _, buffer = cv2.imencode('.jpg', annotated_frame)
+                frame_bytes = buffer.tobytes()
+
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+        finally:
+            cap.release()
+
+    def process_gather_stream(self, camera_id: str, roi: list = None, threshold: int = None):
+        """
+        处理摄像头聚集检测视频流
+
+        Args:
+            camera_id: 摄像头ID
+            roi: ROI区域
+            threshold: 阈值
+
+        Yields:
+            bytes: 编码后的视频帧
+        """
+        from ..algorithms import VideoProcessingCoordinator
+        import cv2
+
+        # 初始化视频处理器
+        processor = VideoProcessingCoordinator(camera_id=camera_id)
+
+        # 获取摄像头源
+        camera_source = self.get_camera_source(camera_id)
+
+        # 打开摄像头
+        cap = cv2.VideoCapture(camera_source)
+        if not cap.isOpened():
+            raise Exception(f"无法打开摄像头 {camera_id} (源: {camera_source})")
+
+        try:
+            # 初始化检测器
+            detector = processor._get_gather_detector()
+
+            # 设置默认ROI区域（如果没有通过参数传递）
+            if roi is None:
+                # 默认ROI区域可以根据您的需要修改
+                roi = [(220, 300), (700, 300), (700, 700), (200, 700)]
+
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                # 执行聚集检测
+                result = detector.detect_gather(frame, roi, threshold if threshold is not None else 5)
+
+                # 在帧上绘制检测结果
+                annotated_frame = processor._draw_gather_detections(
+                    frame, roi, result['roi_person_count'], threshold if threshold is not None else 5, result['alert_triggered']
+                )
+
+                # 绘制检测到的人员框（仅ROI区域内的人员框）
+                for box in result['roi_person_boxes']:
+                    x1, y1, x2, y2 = box.astype(int)
+                    cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+                # 编码帧
+                _, buffer = cv2.imencode('.jpg', annotated_frame)
+                frame_bytes = buffer.tobytes()
+
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+        finally:
+            cap.release()
+
+    def process_banner_stream(self, camera_id: str, roi: list = None, conf_threshold: float = None, iou_threshold: float = None):
+        """
+        处理摄像头横幅检测视频流
+
+        Args:
+            camera_id: 摄像头ID
+            roi: ROI区域
+            conf_threshold: 置信度阈值
+            iou_threshold: IOU阈值
+
+        Yields:
+            bytes: 编码后的视频帧
+        """
+        from ..algorithms import VideoProcessingCoordinator
+        import cv2
+
+        # 初始化视频处理器
+        processor = VideoProcessingCoordinator(camera_id=camera_id)
+
+        # 获取摄像头源
+        camera_source = self.get_camera_source(camera_id)
+
+        # 打开摄像头
+        cap = cv2.VideoCapture(camera_source)
+        if not cap.isOpened():
+            raise Exception(f"无法打开摄像头 {camera_id} (源: {camera_source})")
+
+        try:
+            # 初始化检测器
+            detector = processor._get_banner_detector(
+                conf_threshold=conf_threshold if conf_threshold is not None else 0.5,
+                iou_threshold=iou_threshold if iou_threshold is not None else 0.45
+            )
+
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                # 执行横幅检测
+                results, banners = detector.detect_banner(frame)
+
+                # 在帧上绘制检测结果
+                annotated_frame = processor._draw_banner_detections(frame, banners)
+
+                # 编码帧
+                _, buffer = cv2.imencode('.jpg', annotated_frame)
+                frame_bytes = buffer.tobytes()
+
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+        finally:
+            cap.release()

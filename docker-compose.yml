@@ -11,7 +11,6 @@ services:
     volumes:
       - ./api/uploads:/app/api/uploads
       - ./api/processed_videos:/app/api/processed_videos
-      - ./api/alerts:/app/api/alerts  # 报警信息存储目录
     environment:
       - PYTHONPATH=/app
 
@@ -26,7 +25,6 @@ services:
     volumes:
       - ./api/uploads:/app/api/uploads
       - ./api/processed_videos:/app/api/processed_videos
-      - ./api/alerts:/app/api/alerts
     environment:
       - PYTHONPATH=/app
     deploy:
@@ -48,7 +46,6 @@ services:
     volumes:
       - ./api/uploads:/app/api/uploads
       - ./api/processed_videos:/app/api/processed_videos
-      - ./api/alerts:/app/api/alerts
     environment:
       - PYTHONPATH=/app
 
