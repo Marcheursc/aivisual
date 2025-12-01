@@ -195,20 +195,20 @@ docker-compose up --build
 
 ```bash
 # 构建后端镜像
-docker build -t cv-backend -f Dockerfile.backend .
-
-# 构建前端镜像
-docker build -t cv-frontend -f Dockerfile.frontend .
+docker build --platform linux/amd64 -f Dockerfile.backend -t cv-backend-x86 .
+docker save -o cv-backend-x86-amd64.tar cv-backend-x86:latest
 ```
 
 分别运行容器：
 
 ```bash
 # 运行后端服务
-docker run -d -p 8000:8000 --name backend cv-backend
+docker run -d \
+  --platform linux/amd64 \
+  --name cv-backend-container \
+  -p 8000:8000 \
+  cv-backend-x86
 
-# 运行前端应用
-docker run -d -p 3000:3000 --name frontend cv-frontend
 ```
 
 ## Git工作流规范
