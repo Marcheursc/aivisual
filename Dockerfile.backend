@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -12,7 +12,6 @@ COPY requirements-cpu.txt .
 
 # 安装依赖（启用缓存加速后续构建）
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu && \
     pip install -r requirements-cpu.txt
 
 # 复制代码

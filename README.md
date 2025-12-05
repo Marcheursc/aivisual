@@ -18,7 +18,7 @@
 
 ```
 project/
-├── api/                      # FastAPI 后端服务
+├── api/                      # 检测引擎服务
 │   ├── algorithms/           # 核心算法模块
 │   ├── config/              # 配置文件
 │   ├── models/              # 模型管理
@@ -28,28 +28,7 @@ project/
 │   ├── uploads/             # 上传文件目录
 │   ├── processed_videos/    # 处理后视频目录
 │   └── cv_api.py            # FastAPI 主服务
-├── frontend/                # React 前端应用
-│   ├── public/              # 静态资源
-│   ├── src/                 # 源代码
-│   │   ├── components/      # 公共组件（可复用）
-│   │   ├── pages/           # 页面组件
-│   │   │   ├── Home.js      # 首页
-│   │   │   ├── Upload/      # 上传页面
-│   │   │   │   ├── index.js
-│   │   │   │   └── VideoUpload.js
-│   │   │   ├── Detect/      # 检测页面
-│   │   │   │   ├── index.js
-│   │   │   │   └── DetectionControl.js
-│   │   │   ├── Status/      # 状态页面
-│   │   │   │   ├── index.js
-│   │   │   │   └── TaskStatus.js
-│   │   ├── routes/          # 前端路由配置
-│   │   │   └── index.js     # 路由定义
-│   │   ├── App.js           # 主应用组件
-│   │   ├── App.css          # 样式
-│   │   └── index.js         # 入口文件
-│   └── package.json         # 前端依赖配置
-├── yolov12/                 # YOLOv12 模型文件
+├── yolov12/                 # YOLOv12 模型文件和YOLO主函数
 ├── Dockerfile.backend       # 后端 Docker 配置
 ├── Dockerfile.frontend      # 前端 Docker 配置
 ├── docker-compose.yml       # Docker 容器编排配置
@@ -57,7 +36,7 @@ project/
 ```
 ## 快速开始
 ```bash
-git clone https://github.com/yourusername/Detect-Engine.git
+git clone https://github.com/Marcheursc/aivisual.git
 # 在项目根目录下运行：
 pip install pre-commit
 pre-commit install
@@ -67,38 +46,22 @@ pre-commit run --all-files
 ## 安装依赖
 
 ```bash
-# 安装前端依赖
-cd frontend
-npm install
-
-# 返回项目根目录
-cd ..
-
 # 安装Python依赖
-pip install -r requirements.txt
-
-# 安装lap库（ByteTrack需要）
-pip install lap>=0.5.12
-
-# 安装PyTorch相关库（根据你的环境选择合适的版本）
-# CUDA 12.1版本
-pip install torch==2.8.0+cu121 torchvision==0.13.0+cu121 torchaudio==2.0.0+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
-
-# CPU版本
-pip install torch==2.8.0+cpu torchvision==0.13.0+cpu torchaudio==2.0.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+conda env create -f environment.yml 或者 pip install -r requirements.txt
 ```
 
 ## 运行系统
 
-系统采用前后端分离架构，需要分别启动前端和后端服务：
+系统采用分离架构，需要分别启动检测服务和其他服务：
 
 ```bash
-# 启动后端API服务
-python api/cv_api.py
-
-# 在另一个终端启动前端应用
-cd frontend
-npm start
+# 启动检测服务
+# 在项目根目录下运行:
+python -m api.cv_api
+# 或者
+uvicorn api.cv_api:app --host 0.0.0.0 --port 8000
+# 再启动其他应用
+aivisual-core or aivisual-hub
 ```
 
 或者使用Docker容器化部署：
@@ -107,109 +70,24 @@ npm start
 # 使用docker-compose一键部署
 docker-compose up --build
 ```
-
+启动Rabbitmq服务器
 ```bash
 # RabbitMQ
 docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4-management
 ```
 
 访问地址：
-- 前端界面: http://localhost:3000
-- 后端API文档: http://localhost:8000/docs
+- API文档: http://localhost:8000/docs
 
 ## 部署说明
-
-本项目采用 React + FastAPI 的前后端分离架构，并支持 Docker 容器化部署。
 
 ### 本地开发部署
 
 #### 环境要求
 
-- Python 3.8+
+- Python 3.11+
 - Node.js 14+
 - Docker & Docker Compose (可选，用于容器化部署)
-
-#### 前端依赖安装
-
-```bash
-cd frontend
-npm install
-```
-
-#### 后端依赖安装
-
-```bash
-# 安装 Python 依赖
-pip install -r requirements.txt
-
-# 安装lap库（ByteTrack需要）
-pip install lap>=0.5.12
-
-# 安装PyTorch相关库（根据你的环境选择合适的版本）
-# CUDA 12.1版本
-pip install torch==2.8.0+cu121 torchvision==0.13.0+cu121 torchaudio==2.0.0+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
-
-# CPU版本
-pip install torch==2.8.0+cpu torchvision==0.13.0+cpu torchaudio==2.0.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-```
-
-#### 后端服务启动
-
-```bash
-# 启动 FastAPI 服务
-uvicorn api.cv_api:app --host 0.0.0.0 --port 8000
-
-# 或者使用 Python 直接运行
-python api/cv_api.py
-```
-
-访问 `http://localhost:8000` 查看 API 文档
-
-#### 前端应用启动
-
-```bash
-cd frontend
-npm start
-```
-
-访问 `http://localhost:3000` 使用前端应用
-
-### Docker 容器化部署
-
-#### 构建和运行
-
-使用 docker-compose 一键部署：
-
-```bash
-docker-compose up --build
-```
-
-#### 访问应用
-
-- 前端界面: http://localhost:3000
-- 后端 API: http://localhost:8000
-
-#### 分别构建和运行
-
-分别构建前后端镜像：
-
-```bash
-# 构建后端镜像
-docker build --platform linux/amd64 -f Dockerfile.backend -t cv-backend-x86 .
-docker save -o cv-backend-x86-amd64.tar cv-backend-x86:latest
-```
-
-分别运行容器：
-
-```bash
-# 运行后端服务
-docker run -d \
-  --platform linux/amd64 \
-  --name cv-backend-container \
-  -p 8000:8000 \
-  cv-backend-x86
-
-```
 
 ## Git工作流规范
 
@@ -337,7 +215,7 @@ API路由已按功能模块分离到独立文件中：
 
 ### 环境变量
 
-前端通过环境变量配置后端 API 地址，在 Docker 环境中已配置为 `http://localhost:8000`。在本地开发环境中，可以通过修改前端代码中的 API 地址来配置。
+通过环境变量配置后端 API 地址，在 Docker 环境中已配置为 `http://localhost:8000`。在本地开发环境中，可以通过修改前端代码中的 API 地址来配置。
 
 ## 核心算法模块说明
 
@@ -363,10 +241,3 @@ API路由已按功能模块分离到独立文件中：
 3. **CUDA相关问题**:
    - 如果没有GPU或CUDA不可用，系统会自动回退到CPU运行
    - 确保安装了正确版本的PyTorch和CUDA驱动
-
-## 应用场景
-
-- 安全监控
-- 入侵检测
-- 公共空间监控
-- 智慧城市应用

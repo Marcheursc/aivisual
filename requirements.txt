@@ -1,8 +1,10 @@
 # YOLOv12 dependencies with PyTorch 2.8.0 + CUDA 12.8
+# 此依赖列表仅供参考，建议使用environment.yml
 torch==2.8.0+cu128
-torchvision==0.13.0+cu128
-torchaudio==2.0.0+cu128
+torchvision==0.23.0+cu128
+torchaudio==2.8.0+cu128
 timm>=1.0.14
+stringzilla==4.2.3
 albumentations>=2.0.4
 onnx>=1.14.0
 onnxruntime>=1.15.1
