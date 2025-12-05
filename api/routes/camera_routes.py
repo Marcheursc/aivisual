@@ -227,4 +227,3 @@ def get_camera_source(camera_id: str):
     except:
         # 默认使用系统摄像头0
         return 0
-

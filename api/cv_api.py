@@ -1,12 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# 使用相对导入
-from .routes.file_routes import router as file_router
-from .routes.task_routes import router as task_router
+# 只导入需要的路由
 from .routes.camera_routes import router as camera_router
 from .routes.alarm_routes import router as alarm_router
 from .utils.ascii import ascii_art as draw
+
 # 初始化 FastAPI 应用
 app = FastAPI(title="检测引擎API")
 
@@ -19,9 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 注册路由
-app.include_router(file_router)
-app.include_router(task_router)
+# 只注册实时流分析相关的路由
 app.include_router(camera_router)
 app.include_router(alarm_router)
 

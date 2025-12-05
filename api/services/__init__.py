@@ -3,9 +3,7 @@
 """
 
 from .camera_service import CameraService
-from .video_service import VideoService
 
 __all__ = [
     "CameraService",
-    "VideoService"
 ]
