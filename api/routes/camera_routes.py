@@ -3,10 +3,12 @@
 处理实时摄像头流和摄像头管理功能
 """
 
-from fastapi import APIRouter, HTTPException, Query, Form
+from fastapi import APIRouter, HTTPException, Query, Form, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
 from typing import List, Optional
+import json
 from ..services.camera_service import CameraService
+from ..utils.security import require_bearer_token
 
 router = APIRouter()
 
@@ -14,7 +16,7 @@ router = APIRouter()
 camera_service = CameraService()
 
 @router.get("/cameras")
-async def get_all_cameras():
+async def get_all_cameras(_: bool = Depends(require_bearer_token)):
     """
     获取所有摄像头列表
     """
@@ -26,7 +28,7 @@ async def get_all_cameras():
 
 
 @router.get("/cameras/scene/{camera_id}")
-async def get_camera_scene(camera_id: str):
+async def get_camera_scene(camera_id: str, _: bool = Depends(require_bearer_token)):
     """
     获取指定摄像头的场景类型
     - camera_id: 摄像头ID
@@ -41,7 +43,7 @@ async def get_camera_scene(camera_id: str):
 
 
 @router.post("/cameras/assign_scene")
-async def assign_camera_to_scene(camera_id: str, scene_type: str):
+async def assign_camera_to_scene(camera_id: str, scene_type: str, _: bool = Depends(require_bearer_token)):
     """
     将摄像头分配到指定场景
     - camera_id: 摄像头ID
@@ -57,7 +59,11 @@ async def assign_camera_to_scene(camera_id: str, scene_type: str):
 
 
 @router.post("/cameras/bind_device")
-async def bind_camera_to_device(camera_id: str = Form(...), device_source: str = Form(...)):
+async def bind_camera_to_device(
+    camera_id: str = Form(...),
+    device_source: str = Form(...),
+    _: bool = Depends(require_bearer_token),
+):
     """
     将摄像头绑定到设备源
     - camera_id: 摄像头ID
@@ -73,7 +79,7 @@ async def bind_camera_to_device(camera_id: str = Form(...), device_source: str =
 
 
 @router.delete("/cameras/unbind_device/{camera_id}")
-async def unbind_camera_device(camera_id: str):
+async def unbind_camera_device(camera_id: str, _: bool = Depends(require_bearer_token)):
     """
     解除摄像头与设备的绑定
     - camera_id: 摄像头ID
@@ -88,7 +94,7 @@ async def unbind_camera_device(camera_id: str):
 
 
 @router.get("/cameras/device/{camera_id}")
-async def get_camera_device(camera_id: str):
+async def get_camera_device(camera_id: str, _: bool = Depends(require_bearer_token)):
     """
     获取摄像头绑定的设备源
     - camera_id: 摄像头ID
@@ -103,7 +109,12 @@ async def get_camera_device(camera_id: str):
 
 
 @router.post("/cameras")
-async def add_camera(camera_id: str = Form(default=""), name: str = Form(default=""), location: str = Form(default="")):
+async def add_camera(
+    camera_id: str = Form(default=""),
+    name: str = Form(default=""),
+    location: str = Form(default=""),
+    _: bool = Depends(require_bearer_token),
+):
     """
     添加新的摄像头
     - camera_id: 摄像头ID
@@ -120,7 +131,7 @@ async def add_camera(camera_id: str = Form(default=""), name: str = Form(default
 
 
 @router.delete("/cameras/{camera_id}")
-async def remove_camera(camera_id: str):
+async def remove_camera(camera_id: str, _: bool = Depends(require_bearer_token)):
     """
     删除摄像头
     - camera_id: 摄像头ID
@@ -216,6 +227,42 @@ async def process_camera(
             camera_service.process_loitering_stream(camera_id, loitering_time_threshold),
             media_type="multipart/x-mixed-replace; boundary=frame"
         )
+
+
+@router.get(
+    "/streams/play/{camera_id}",
+    dependencies=[Depends(require_bearer_token)],
+    summary="统一流播放入口（受保护）"
+)
+async def play_stream(
+        camera_id: str,
+        detection_type: str = Query(default="loitering", description="检测类型：loitering/leave/gather/banner"),
+        loitering_time_threshold: int = Query(default=20, ge=1, le=600),
+        leave_roi: Optional[str] = Query(default=None, description="离岗ROI，JSON数组"),
+        leave_threshold: Optional[int] = Query(default=None, ge=1, le=600),
+        gather_roi: Optional[str] = Query(default=None, description="聚集ROI，JSON数组"),
+        gather_threshold: Optional[int] = Query(default=None, ge=1, le=200),
+        banner_roi: Optional[str] = Query(default=None, description="横幅ROI，JSON数组"),
+        banner_conf_threshold: Optional[float] = Query(default=None, ge=0.01, le=1.0),
+        banner_iou_threshold: Optional[float] = Query(default=None, ge=0.01, le=1.0)
+):
+    """
+    统一的流播放入口，增加 Bearer Token 保护。
+
+    行为与 /cameras/process_camera/ 保持一致，可逐步替换旧入口。
+    """
+    return await process_camera(
+        camera_id=camera_id,
+        detection_type=detection_type,
+        loitering_time_threshold=loitering_time_threshold,
+        leave_roi=leave_roi,
+        leave_threshold=leave_threshold,
+        gather_roi=gather_roi,
+        gather_threshold=gather_threshold,
+        banner_roi=banner_roi,
+        banner_conf_threshold=banner_conf_threshold,
+        banner_iou_threshold=banner_iou_threshold
+    )
 
 
 def get_camera_source(camera_id: str):

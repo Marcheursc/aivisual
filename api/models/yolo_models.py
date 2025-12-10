@@ -7,6 +7,9 @@ import sys
 from ultralytics import YOLO
 import torch
 
+# 全局模型缓存，键为 (模型绝对路径, 设备)
+_MODEL_CACHE = {}
+
 
 class YOLOModelManager:
     """YOLO 模型管理器"""
@@ -21,9 +24,10 @@ class YOLOModelManager:
         # 获取项目根目录的绝对路径
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.model_dir = os.path.join(project_root, model_dir) if model_dir == "yolov12" else model_dir
-        self.models = {}
+        # 使用全局缓存
+        self.models = _MODEL_CACHE
 
-    def load_model(self, model_name="yolov12n.pt", device='cuda'):
+    def load_model(self, model_name="yolov12n.pt", device='cuda', model_dir=None):
         """
         加载 YOLO 模型
 
@@ -39,10 +43,12 @@ class YOLOModelManager:
             print("CUDA is not available, falling back to CPU")
             device = 'cpu'
 
-        model_path = os.path.join(self.model_dir, model_name)
+        load_dir = model_dir if model_dir else self.model_dir
+        model_path = os.path.join(load_dir, model_name)
+        cache_key = (os.path.abspath(model_path), device)
         print(f"Attempting to load model from: {model_path}")
 
-        if model_name not in self.models:
+        if cache_key not in self.models:
             print(f"Loading YOLO model from {model_path}...")
             try:
                 if not os.path.exists(model_path):
@@ -50,7 +56,7 @@ class YOLOModelManager:
                     
                 model = YOLO(model_path)
                 model.to(device)
-                self.models[model_name] = {
+                self.models[cache_key] = {
                     'model': model,
                     'device': device
                 }
@@ -59,7 +65,7 @@ class YOLOModelManager:
                 print(f"Error loading model {model_name}: {e}")
                 raise
 
-        return self.models[model_name]['model']
+        return self.models[cache_key]['model']
 
     def get_model_device(self, model_name="yolov12n.pt"):
         """
@@ -71,8 +77,9 @@ class YOLOModelManager:
         Returns:
             设备名称
         """
-        if model_name in self.models:
-            return self.models[model_name]['device']
+        for (path, device) in self.models:
+            if path.endswith(model_name):
+                return device
         return None
 
     def set_model_classes(self, model_name="yolov12n.pt", classes=None):
@@ -83,6 +90,8 @@ class YOLOModelManager:
             model_name: 模型文件名
             classes: 类别列表
         """
-        if model_name in self.models and classes:
-            model = self.models[model_name]['model']
-            model.set_classes(classes)
+        if not classes:
+            return
+        for (path, _device), entry in self.models.items():
+            if path.endswith(model_name):
+                entry['model'].set_classes(classes)

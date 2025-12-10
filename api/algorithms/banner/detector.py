@@ -8,8 +8,8 @@ import numpy as np
 import sys
 import torch
 import os
-from ultralytics import YOLO
 import time
+from ...models.yolo_models import YOLOModelManager
 
 
 class BannerDetector:
@@ -40,12 +40,10 @@ class BannerDetector:
 
             print(f"[BannerDetector] 使用设备: {device}")
 
-            # 尝试直接使用 ultralytics YOLO 加载模型
-            self.model = YOLO(model_path)
-            self.model.to(device)
+            model_manager = YOLOModelManager(model_dir=os.path.dirname(model_path) or "yolov12")
+            self.model = model_manager.load_model(os.path.basename(model_path), device, model_dir=os.path.dirname(model_path) or "yolov12")
             self.device = device
 
-            # 打印模型信息
             print(f"[BannerDetector] 模型加载成功!")
             print(f"[BannerDetector] 可用类别总数: {len(self.model.names)}")
             print(f"[BannerDetector] 所有类别: {list(self.model.names.values())}")
@@ -56,8 +54,7 @@ class BannerDetector:
             try:
                 default_model_path = os.path.join(project_root, "yolov12", "yolov12n.pt")
                 print(f"[BannerDetector] 尝试加载默认模型: {default_model_path}")
-                self.model = YOLO(default_model_path)
-                self.model.to(device)
+                self.model = model_manager.load_model(os.path.basename(default_model_path), device, model_dir=os.path.dirname(default_model_path))
                 self.device = device
                 print(f"[BannerDetector] 默认模型加载成功!")
                 print(f"[BannerDetector] 可用类别总数: {len(self.model.names)}")

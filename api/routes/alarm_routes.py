@@ -3,13 +3,14 @@
 用于接收告警信息并发送到RabbitMQ队列
 """
 
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Depends
 from fastapi.responses import JSONResponse
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 import uuid
 from pydantic import BaseModel, Field
 from ..services.rabbitmq_service import rabbitmq_producer
+from ..utils.security import require_bearer_token
 
 
 class Alarm(BaseModel):
@@ -32,7 +33,7 @@ class BatchAlarmRequest(BaseModel):
     alarms: List[Alarm] = Field(..., description="告警信息列表")
 
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_bearer_token)])
 
 
 @router.post("/send_alarm")

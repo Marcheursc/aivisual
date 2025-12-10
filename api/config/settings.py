@@ -4,6 +4,10 @@
 
 import os
 
+# 读取环境变量的简易辅助
+def _env(name: str, default):
+    return os.getenv(name, default)
+
 # 项目根目录
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -31,24 +35,24 @@ DEFAULT_LEAVE_ROI = [(600, 100), (1000, 100), (1000, 700), (600, 700)]
 DEFAULT_GATHER_ROI = [(220, 300), (700, 300), (700, 700), (200, 700)]
 DEFAULT_BANNER_ROI = [(0, 0), (1280, 0), (1280, 720), (0, 720)]  # 默认全屏检测
 
-# RabbitMQ配置
-RABBITMQ_HOST = "rabbitmq"
-RABBITMQ_PORT = 5672
-RABBITMQ_USERNAME = "guest"
-RABBITMQ_PASSWORD = "guest"
-RABBITMQ_VIRTUAL_HOST = "/"
+# RabbitMQ配置（支持环境变量覆盖）
+RABBITMQ_HOST = _env("AIVISUAL_RABBITMQ_HOST", "rabbitmq")
+RABBITMQ_PORT = int(_env("AIVISUAL_RABBITMQ_PORT", 5672))
+RABBITMQ_USERNAME = _env("AIVISUAL_RABBITMQ_USERNAME", "guest")
+RABBITMQ_PASSWORD = _env("AIVISUAL_RABBITMQ_PASSWORD", "guest")
+RABBITMQ_VIRTUAL_HOST = _env("AIVISUAL_RABBITMQ_VHOST", "/")
 
 # 交换机配置
-RABBITMQ_EXCHANGE = "alarm_exchange"
-RABBITMQ_EXCHANGE_TYPE = "direct"
+RABBITMQ_EXCHANGE = _env("AIVISUAL_RABBITMQ_EXCHANGE", "alarm_exchange")
+RABBITMQ_EXCHANGE_TYPE = _env("AIVISUAL_RABBITMQ_EXCHANGE_TYPE", "direct")
 
 # 队列配置
-RABBITMQ_QUEUE = "alarm_queue"
-RABBITMQ_ROUTING_KEY = "alarm_routing_key"
+RABBITMQ_QUEUE = _env("AIVISUAL_RABBITMQ_QUEUE", "alarm_queue")
+RABBITMQ_ROUTING_KEY = _env("AIVISUAL_RABBITMQ_ROUTING_KEY", "alarm_routing_key")
 
 # 消息配置
-RABBITMQ_MESSAGE_DURABLE = True
+RABBITMQ_MESSAGE_DURABLE = _env("AIVISUAL_RABBITMQ_MESSAGE_DURABLE", "true").lower() == "true"
 
 # 连接重试配置
-RABBITMQ_CONNECTION_RETRIES = 3
-RABBITMQ_CONNECTION_RETRY_DELAY = 5
+RABBITMQ_CONNECTION_RETRIES = int(_env("AIVISUAL_RABBITMQ_CONNECTION_RETRIES", 3))
+RABBITMQ_CONNECTION_RETRY_DELAY = int(_env("AIVISUAL_RABBITMQ_CONNECTION_RETRY_DELAY", 5))

@@ -1,7 +1,7 @@
 # Detect-Engine
 ## 简介
 
-这是一个基于YOLOv12的AI视频智能检测系统，具备目标检测、跟踪和多种行为分析功能，采用React + FastAPI的现代化前后端分离架构。
+这是一个基于YOLOv12的AI视频智能检测系统，具备目标检测、跟踪和多种行为分析功能，采用FastAPI的现代化后端分离架构。
 
 ## 功能特性
 
@@ -30,7 +30,6 @@ project/
 │   └── cv_api.py            # FastAPI 主服务
 ├── yolov12/                 # YOLOv12 模型文件和YOLO主函数
 ├── Dockerfile.backend       # 后端 Docker 配置
-├── Dockerfile.frontend      # 前端 Docker 配置
 ├── docker-compose.yml       # Docker 容器编排配置
 └── requirements.txt         # Python 依赖
 ```
@@ -40,7 +39,7 @@ git clone https://github.com/Marcheursc/aivisual.git
 # 在项目根目录下运行：
 pip install pre-commit
 pre-commit install
-pre-commit run --all-files
+pre-commit run
 ```
 
 ## 安装依赖
@@ -152,23 +151,6 @@ git push origin feature/新功能名称
 
 4. 代码审查通过后合并到develop分支
 
-## 前端路由
-
-前端采用React Router进行路由管理，包含以下页面：
-
-1. **首页** - `/`
-   - 系统介绍和导航入口
-
-2. **视频上传** - `/upload`
-   - 视频文件选择和上传功能
-
-3. **行为检测** - `/detect`
-   - 检测参数设置和任务启动
-
-4. **任务状态** - `/status`
-   - 任务进度查看和结果下载
-
-路由配置文件位于 `frontend/src/routes/index.js`，与主应用组件分离以提高可维护性。
 
 ## 后端路由
 

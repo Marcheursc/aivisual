@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -7,18 +8,21 @@ from .routes.alarm_routes import router as alarm_router
 from .utils.ascii import ascii_art as draw
 
 # 初始化 FastAPI 应用
-app = FastAPI(title="检测引擎API")
+app = FastAPI(title="视频检测引擎API")
 
-# 配置CORS
+# 配置CORS：支持从环境变量 AIVISUAL_CORS_ORIGINS 读取，逗号分隔；默认全开放
+allowed_origins = os.getenv("AIVISUAL_CORS_ORIGINS", "*")
+cors_allow_list = [o.strip() for o in allowed_origins.split(",")] if allowed_origins else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 在生产环境中应该指定具体的域名
+    allow_origins=cors_allow_list,  # 生产环境建议指定具体的域名
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 只注册实时流分析相关的路由
+# 仅注册实时流分析相关的路由
 app.include_router(camera_router)
 app.include_router(alarm_router)
 
@@ -30,5 +34,6 @@ async def root():
 
 if __name__ == "__main__":
     import uvicorn
+
     print(draw)
     uvicorn.run(app, host="0.0.0.0", port=8000)
