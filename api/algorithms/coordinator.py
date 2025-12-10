@@ -152,7 +152,7 @@ class VideoProcessingCoordinator:
                 
         return draw_leave_detections(frame, roi, status, roi_person_count, absence_start_time, threshold, alert_triggered)
 
-    def _draw_gather_detections(self, frame, roi, roi_person_count, gather_threshold, alert_triggered):
+    def _draw_gather_detections(self, frame, roi, roi_person_count, gather_threshold, alert_triggered, qualified_persons=None, loitering_time_threshold=3, current_boxes=None, person_tracker=None):
         """
         绘制聚集检测结果
 
@@ -162,6 +162,10 @@ class VideoProcessingCoordinator:
             roi_person_count: ROI内人数
             gather_threshold: 聚集人数阈值
             alert_triggered: 是否触发警报
+            qualified_persons: 符合条件的人员列表
+            loitering_time_threshold: 停留时间阈值
+            current_boxes: 当前检测框
+            person_tracker: 人员跟踪器
 
         Returns:
             frame: 绘制了检测结果的帧
@@ -202,7 +206,7 @@ class VideoProcessingCoordinator:
             except Exception as e:
                 print(f"[Gather] 发送告警消息时出错: {e}")
         
-        return draw_gather_detections(frame, roi, roi_person_count, gather_threshold, alert_triggered)
+        return draw_gather_detections(frame, roi, roi_person_count, gather_threshold, alert_triggered, qualified_persons, loitering_time_threshold, current_boxes, person_tracker)
 
     def _draw_banner_detections(self, frame, banners):
         """

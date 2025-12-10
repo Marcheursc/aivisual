@@ -420,11 +420,13 @@ class CameraService:
 
                 # 在帧上绘制检测结果
                 annotated_frame = processor._draw_gather_detections(
-                    frame, roi, result['roi_person_count'], threshold if threshold is not None else 5, result['alert_triggered']
+                    frame, roi, result['roi_person_count'], threshold if threshold is not None else 5, result['alert_triggered'],
+                    result.get('qualified_persons'), 3, result.get('current_boxes'), result.get('person_tracker')
                 )
 
-                # 绘制检测到的人员框（仅ROI区域内的人员框）
-                for box in result['roi_person_boxes']:
+                # 绘制检测到的人员框（仅ROI区域内符合条件的人员框）
+                for person in result['qualified_persons']:
+                    box = person['box']
                     x1, y1, x2, y2 = box.astype(int)
                     cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
